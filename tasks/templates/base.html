@@ -2,9 +2,11 @@
 <html>
 <head>
     <title>{% block title %}{% endblock %}</title>
+    <link href="/static/base.css" rel="stylesheet">
 </head>
 <body>
     <div id="sidebar">
+        <h1>Tasks</h1>
         {% block sidebar %}{% endblock %}
     </div>
     <div id="content">
