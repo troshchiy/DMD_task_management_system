@@ -1,0 +1,11 @@
+{% extends 'base.html' %}
+
+{% block title %}Tasks{% endblock %}
+
+{% block content %}
+    <h1>Tasks</h1>
+    <form method="POST">
+        {% csrf_token %}
+        <input id="add-task" placeholder="Add a task">
+    </form>
+{% endblock %}
