@@ -2,10 +2,18 @@
 
 {% block title %}Tasks{% endblock %}
 
+{% block sidebar %}
+    <ul id="tasks-list">
+        {% for task in tasks %}
+            <li>{{ task.title }}</li>
+        {% endfor %}
+    </ul>
+{% endblock %}
+
 {% block content %}
     <h1>Tasks</h1>
     <form method="POST">
         {% csrf_token %}
-        <input id="add-task" placeholder="Add a task">
+        <input name="title" id="add-task" placeholder="Add a task">
     </form>
 {% endblock %}

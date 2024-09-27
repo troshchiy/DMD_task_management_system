@@ -4,6 +4,11 @@
     <title>{% block title %}{% endblock %}</title>
 </head>
 <body>
-    {% block content %}{% endblock %}
+    <div id="sidebar">
+        {% block sidebar %}{% endblock %}
+    </div>
+    <div id="content">
+        {% block content %}{% endblock %}
+    </div>
 </body>
 </html>

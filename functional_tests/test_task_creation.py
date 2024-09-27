@@ -29,9 +29,9 @@ class NewVisitorTest(FunctionalTest):
         # When user hits enter, the page update, and now the page contains "Buy tea" as an item in a tasks lists
         inputbox.send_keys(Keys.ENTER)
         time.sleep(1)
-        table = self.browser.find_element(By.ID, 'tasks-list')
-        rows = self.browser.find_elements(By.TAG_NAME, 'tr')
-        self.assertIn('Buy tea', [row.text for row in rows])
+        tasks_list = self.browser.find_element(By.ID, 'tasks-list')
+        list_items = tasks_list.find_elements(By.TAG_NAME, 'li')
+        self.assertIn('Buy tea', [item.text for item in list_items])
 
         # There is still a text box inviting user to add another item
         # User enters "Brew the tea"
@@ -41,8 +41,8 @@ class NewVisitorTest(FunctionalTest):
 
         # The page updates again, and now shows both items on user's list
         time.sleep(1)
-        table = self.browser.find_element(By.ID, 'tasks-list')
-        rows = table.find_elements(By.TAG_NAME, 'tr')
-        rows_text = [row.text for row in rows]
-        self.assertIn('Buy tea', rows_text)
-        self.assertIn('Brew the tea', rows_text)
+        tasks_list = self.browser.find_element(By.ID, 'tasks-list')
+        list_items = tasks_list.find_elements(By.TAG_NAME, 'li')
+        items_text = [item.text for item in list_items]
+        self.assertIn('Buy tea', items_text)
+        self.assertIn('Brew the tea', items_text)
