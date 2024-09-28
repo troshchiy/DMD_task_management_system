@@ -67,7 +67,7 @@ class NewVisitorTest(FunctionalTest):
         time.sleep(1)
         task_info_form = self.browser.find_element(By.ID, 'task-detail')
         title = task_info_form.find_element(By.ID, 'id_title')
-        self.assertEqual('Buy tea', title.text)
+        self.assertEqual('Buy tea', title.get_attribute('value'))
 
         # Then user wants to see detail info about the "Brew the tea" task, and he hits on the list item
         brew_the_tea_li = tasks_list.find_element(By.LINK_TEXT, 'Brew the tea')
@@ -77,7 +77,8 @@ class NewVisitorTest(FunctionalTest):
         time.sleep(1)
         task_info_form = self.browser.find_element(By.ID, 'task-detail')
         title = task_info_form.find_element(By.ID, 'id_title')
-        self.assertEqual('Brew the tea', title.text)
+        self.assertEqual('Brew the tea', title.get_attribute('value'))
 
         # User noticed that now there are no info about the "Buy tea" task
-        self.fail('End the test!')
+        content = self.browser.find_element(By.ID, 'content')
+        self.assertNotIn('Buy tea', content.get_attribute('innerHTML'))

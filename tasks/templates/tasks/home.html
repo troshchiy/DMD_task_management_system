@@ -1,11 +1,12 @@
 {% extends 'base.html' %}
+{% load static %}
 
 {% block title %}Tasks{% endblock %}
 
 {% block sidebar %}
     <ul id="tasks-list">
         {% for task in tasks %}
-            <li><a href="#" data-id="{{ task.id }}">{{ task.title }}</a></li>
+        <li data-url="{% url 'task_detail' task.id %}" onclick="getTaskDetail(this);"><a>{{ task.title }}</a></li>
         {% endfor %}
     </ul>
 {% endblock %}
@@ -15,4 +16,6 @@
         {% csrf_token %}
         {{ form.title }}
     </form>
+    <div id="task-detail-container"></div>
+    <script src="{% static 'tasks/scripts/task_detail.js' %}"></script>
 {% endblock %}
