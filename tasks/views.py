@@ -10,3 +10,7 @@ def home_page(request):
     form = TaskForm()
     tasks = Task.objects.all()
     return render(request,'tasks/home.html', {'form': form, 'tasks': tasks})
+
+
+def get_task(request):
+    task_id = request.POST.get('id')

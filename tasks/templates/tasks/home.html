@@ -5,13 +5,13 @@
 {% block sidebar %}
     <ul id="tasks-list">
         {% for task in tasks %}
-            <li>{{ task.title }}</li>
+            <li><a href="#" data-id="{{ task.id }}">{{ task.title }}</a></li>
         {% endfor %}
     </ul>
 {% endblock %}
 
 {% block content %}
-    <form method="POST">
+    <form id="add-task" method="POST">
         {% csrf_token %}
         {{ form.title }}
     </form>
