@@ -43,7 +43,7 @@ body {
   padding: 0px 10px;
 }
 
-#add-task {
+#id_title {
     width: 70%;
     padding: 10px 6px;
     font-size: 18px;
@@ -52,7 +52,7 @@ body {
     transition: border-color ease-in-out .15s;
 }
 
-#add-task:focus {
+#id_title:focus {
     border-color: #6f42c1;
     outline: 0;
 }

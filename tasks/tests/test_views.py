@@ -1,11 +1,18 @@
 from django.test import TestCase
 from tasks.models import Task
+from tasks.forms import TaskForm
 
 
 class HomePageTest(TestCase):
     def test_uses_home_template(self):
         response = self.client.get('/')
         self.assertTemplateUsed(response, 'tasks/home.html')
+
+    def test_displays_task_form(self):
+        response = self.client.get('/')
+        self.assertIsInstance(response.context['form'], TaskForm)
+        self.assertContains(response, 'name="title"')
+
 
     def test_can_save_a_POST_request(self):
         self.client.post('/', data={'title': 'A new task'})

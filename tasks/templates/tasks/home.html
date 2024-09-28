@@ -13,6 +13,6 @@
 {% block content %}
     <form method="POST">
         {% csrf_token %}
-        <input name="title" id="add-task" placeholder="Add a task">
+        {{ form.title }}
     </form>
 {% endblock %}

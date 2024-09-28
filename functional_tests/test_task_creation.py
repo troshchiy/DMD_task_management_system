@@ -17,10 +17,10 @@ class NewVisitorTest(FunctionalTest):
         self.assertIn('Tasks', header_text)
 
         # The website offers to enter a task
-        inputbox = self.browser.find_element(By.ID, 'add-task')
+        inputbox = self.browser.find_element(By.ID, 'id_title')
         self.assertEqual(
             inputbox.get_attribute('placeholder'),
-            'Add a task'
+            'Title'
         )
 
         # User types "Buy tea"
@@ -35,7 +35,7 @@ class NewVisitorTest(FunctionalTest):
 
         # There is still a text box inviting user to add another item
         # User enters "Brew the tea"
-        inputbox = self.browser.find_element(By.ID, 'add-task')
+        inputbox = self.browser.find_element(By.ID, 'id_title')
         inputbox.send_keys("Brew the tea")
         inputbox.send_keys(Keys.ENTER)
 
