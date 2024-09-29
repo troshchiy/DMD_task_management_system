@@ -2,9 +2,10 @@ import json
 
 from django.template.loader import render_to_string
 from django.test import TestCase
+from django.utils.html import escape
 
 from tasks.models import Task
-from tasks.forms import TaskForm
+from tasks.forms import TaskForm, EMPTY_TITLE_ERROR
 
 
 class HomePageTest(TestCase):
@@ -27,6 +28,23 @@ class HomePageTest(TestCase):
     def test_redirects_after_POST(self):
         response = self.client.post('/', data={'title': 'A new task'})
         self.assertRedirects(response, '/')
+
+    def test_for_invalid_input_nothing_saved_to_db(self):
+        self.client.post('/', data={'title': ''})
+        self.assertEqual(Task.objects.count(), 0)
+
+    def test_for_invalid_input_renders_home_template(self):
+        response = self.client.post('/', data={'title': ''})
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'tasks/home.html')
+
+    def test_for_invalid_input_passes_form_to_template(self):
+        response = self.client.post('/', data={'title': ''})
+        self.assertIsInstance(response.context['form'], TaskForm)
+
+    def test_for_invalid_input_shows_error_on_page(self):
+        response = self.client.post('/', data={'title': ''})
+        self.assertContains(response, escape(EMPTY_TITLE_ERROR))
 
 
 class TaskDetailTest(TestCase):
@@ -62,3 +80,9 @@ class TaskDetailTest(TestCase):
 
         self.assertIn(correct_task.title, form)
         self.assertNotIn(other_task.title, form)
+
+    def test_for_not_existing_task_id_returns_http404(self):
+        response = self.client.get(f'/task/532/', headers={'X-Requested-With': 'XMLHttpRequest'})
+        self.assertEqual(response.status_code, 404)
+        self.assertEqual('Not Found', response.content.decode('utf8'))
+
