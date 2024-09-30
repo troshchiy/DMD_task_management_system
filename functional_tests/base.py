@@ -14,17 +14,17 @@ class FunctionalTest(StaticLiveServerTestCase):
     def tearDown(self):
         self.browser.quit()
 
-    def add_task(self, title, description, performers, deadline):
-        title_inputbox = self.get_new_task_element_by_id('id_title')
+    def add_task(self, form, title, description, performers, deadline):
+        title_inputbox = form.find_element(By.ID, 'id_title')
         title_inputbox.send_keys(title)
 
-        description_inputbox = self.get_new_task_element_by_id('id_description')
+        description_inputbox = form.find_element(By.ID, 'id_description')
         description_inputbox.send_keys(description)
 
-        performers_inputbox = self.get_new_task_element_by_id('id_performers')
+        performers_inputbox = form.find_element(By.ID, 'id_performers')
         performers_inputbox.send_keys(performers)
 
-        deadline_inputbox = self.get_new_task_element_by_id('id_deadline')
+        deadline_inputbox = form.find_element(By.ID, 'id_deadline')
         deadline_inputbox.send_keys(deadline)
 
         title_inputbox.send_keys(Keys.ENTER)

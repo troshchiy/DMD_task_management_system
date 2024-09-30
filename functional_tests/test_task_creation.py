@@ -66,7 +66,11 @@ class TaskCreationTest(FunctionalTest):
 
         # There is still a form inviting user to add another task
         # User add task "Brew the tea"
+        add_task_form = self.wait_for(
+            lambda: self.browser.find_element(By.ID, 'add-task')
+        )
         self.add_task(
+            form=add_task_form,
             title='Brew the tea',
             description='Place 10g of tea into the 500ml tea pot, '
                         'pour the heated water and steep tea between 3 to 5 minutes.',
@@ -74,7 +78,7 @@ class TaskCreationTest(FunctionalTest):
             deadline='2024-10-03 13:00'
         )
 
-        # The page updates again, and now shows both items on user's list
+        # The page updates again, and now shows both items on tasks list
         self.wait_for_item_in_tasks_list('Buy tea')
         self.wait_for_item_in_tasks_list('Brew the tea')
 
@@ -91,7 +95,11 @@ class TaskCreationTest(FunctionalTest):
         self.wait_for(lambda: self.browser.find_element(By.CSS_SELECTOR, '#id_deadline:invalid'))
 
         # User starts typing some text for the new task and the error disappears
+        add_task_form = self.wait_for(
+            lambda: self.browser.find_element(By.ID, 'add-task')
+        )
         self.add_task(
+            form=add_task_form,
             title='Buy tea',
             description='Go to the tea shop and buy puer tea',
             performers='Vladislav Troshchiy',
@@ -121,7 +129,11 @@ class TaskCreationTest(FunctionalTest):
         self.wait_for(lambda: self.browser.find_element(By.CSS_SELECTOR, '#id_deadline:invalid'))
 
         # And user can correct it by filling some text in
+        add_task_form = self.wait_for(
+            lambda: self.browser.find_element(By.ID, 'add-task')
+        )
         self.add_task(
+            form=add_task_form,
             title='Brew the tea',
             description='Place 10g of tea into the 500ml tea pot, '
                         'pour the heated water and steep tea between 3 to 5 minutes.',
@@ -142,7 +154,11 @@ class TaskCreationTest(FunctionalTest):
         self.browser.get(self.live_server_url)
 
         # User adds task "Buy tea"
+        add_task_form = self.wait_for(
+            lambda: self.browser.find_element(By.ID, 'add-task')
+        )
         self.add_task(
+            form=add_task_form,
             title='Buy tea',
             description='Go to the tea shop and buy puer tea',
             performers='Vladislav Troshchiy',
@@ -152,7 +168,11 @@ class TaskCreationTest(FunctionalTest):
         self.wait_for_item_in_tasks_list('Buy tea')
 
         # Then user adds task "Brew the tea"
+        add_task_form = self.wait_for(
+            lambda: self.browser.find_element(By.ID, 'add-task')
+        )
         self.add_task(
+            form=add_task_form,
             title='Brew the tea',
             description='Place 10g of tea into the tea pot and steep tea between 3 to 5 minutes.',
             performers='Vlad Troshchiy',
@@ -231,3 +251,25 @@ class TaskCreationTest(FunctionalTest):
         self.assertNotIn('Go to the tea shop and buy puer tea', content.get_attribute('innerHTML'))
         self.assertNotIn('Vladislav Troshchiy', content.get_attribute('innerHTML'))
         self.assertNotIn('2024-10-02 20:00', content.get_attribute('innerHTML'))
+
+    def test_can_create_a_subtask(self):
+        # User goes to homepage and add a task "Brew the tea"
+
+        # Then user hits on the task title at the sidebar
+
+        # Page offers to enter a title, description, performers and deadline to add a subtask
+
+        # User enters data and submit the form
+
+        # The page is being updated,
+        # and now the page contains added subtask title as a subitem of the task in the tasks list
+
+        # User notices that the page still shows the "Brew the tea" task detail page,
+        # and now the page contains "Heat water" as an item of subtasks list
+
+        # There is still a form inviting user to add another subtask
+        # User add subtask "Steep the tea"
+
+        # The page updates again, and now shows both subtask on the sidebar tasks list
+        # and on the "Brew the tea" task details
+        pass
