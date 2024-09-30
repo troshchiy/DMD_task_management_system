@@ -3,7 +3,7 @@ from django.contrib.staticfiles.testing import StaticLiveServerTestCase
 from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.common.keys import Keys
-from selenium.common.exceptions import WebDriverException
+from selenium.common.exceptions import WebDriverException, NoSuchElementException
 
 MAX_WAIT = 10
 
@@ -14,13 +14,20 @@ class FunctionalTest(StaticLiveServerTestCase):
     def tearDown(self):
         self.browser.quit()
 
-    def add_task(self, task):
-        add_task_form = self.wait_for(
-            lambda: self.browser.find_element(By.ID, 'add-task')
-        )
-        inputbox = add_task_form.find_element(By.ID, 'id_title')
-        inputbox.send_keys(task)
-        inputbox.send_keys(Keys.ENTER)
+    def add_task(self, title, description, performers, deadline):
+        title_inputbox = self.get_new_task_element_by_id('id_title')
+        title_inputbox.send_keys(title)
+
+        description_inputbox = self.get_new_task_element_by_id('id_description')
+        description_inputbox.send_keys(description)
+
+        performers_inputbox = self.get_new_task_element_by_id('id_performers')
+        performers_inputbox.send_keys(performers)
+
+        deadline_inputbox = self.get_new_task_element_by_id('id_deadline')
+        deadline_inputbox.send_keys(deadline)
+
+        title_inputbox.send_keys(Keys.ENTER)
 
     def wait_for_item_in_tasks_list(self, item_text):
         start_time = time.time()
@@ -45,6 +52,8 @@ class FunctionalTest(StaticLiveServerTestCase):
                     raise e
                 time.sleep(0.5)
 
-    def get_new_task_title_inputbox(self):
-        add_task_form = self.browser.find_element(By.ID, 'add-task')
-        return add_task_form.find_element(By.ID, 'id_title')
+    def get_new_task_element_by_id(self, element_id):
+        add_task_form = self.wait_for(
+            lambda: self.browser.find_element(By.ID, 'add-task')
+        )
+        return add_task_form.find_element(By.ID, element_id)

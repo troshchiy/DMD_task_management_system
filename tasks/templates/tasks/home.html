@@ -14,8 +14,15 @@
 {% block content %}
     <form id="add-task" method="POST">
         {% csrf_token %}
-        {{ form.title.errors }}
+        {{ form.errors }}
         {{ form.title }}
+        {{ form.description }}
+        {{ form.performers }}
+        <div id="deadline">
+            <label for="id_deadline">{{ form.deadline.label }}:</label>
+            {{ form.deadline }}
+        </div>
+        <input type="submit" id="add-task-btn" value="Add">
     </form>
     <div id="task-detail-container"></div>
     <script src="{% static 'tasks/scripts/task_detail.js' %}"></script>
