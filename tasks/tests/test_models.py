@@ -1,4 +1,7 @@
+import datetime
+
 from django.core.exceptions import ValidationError
+from django.utils import timezone
 
 from tasks.models import Task
 from .base import UnitTest
@@ -12,12 +15,12 @@ class TaskModelTest(UnitTest):
 
         saved_task = Task.objects.first()
         self.assertEqual(task, saved_task)
-        self.assertEqual(UnitTest.valid_task_data['title'], saved_task.title)
-        self.assertEqual(UnitTest.valid_task_data['description'], saved_task.description)
-        self.assertEqual(UnitTest.valid_task_data['performers'], saved_task.performers)
+        self.assertEqual(UnitTest.VALID_TASK_DATA['title'], saved_task.title)
+        self.assertEqual(UnitTest.VALID_TASK_DATA['description'], saved_task.description)
+        self.assertEqual(UnitTest.VALID_TASK_DATA['performers'], saved_task.performers)
         self.assertEqual(
-            UnitTest.valid_task_data['deadline'],
-            saved_task.deadline.strftime('%Y-%m-%d %H:%M')
+            UnitTest.VALID_TASK_DATA['deadline'],
+            saved_task.deadline.strftime(UnitTest.DATETIME_FORMAT)
         )
 
     def assert_cannot_save_task_with_blank_field(self, task_instance, field_name):
@@ -62,3 +65,9 @@ class TaskModelTest(UnitTest):
         null_deadline_task = self.create_task(deadline=None)
 
         self.assert_cannot_save_task_with_null_field(null_deadline_task, 'deadline')
+
+    def test_automatically_set_created_at_field_value(self):
+        self.create_task().save()
+
+        task = Task.objects.first()
+        self.assertAlmostEqual(task.created_at, timezone.now(), delta=datetime.timedelta(seconds=1))

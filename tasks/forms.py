@@ -26,7 +26,7 @@ class TaskForm(forms.ModelForm):
             }),
             'deadline': forms.fields.DateTimeInput(attrs={
                 'placeholder': 'e.g. 2025-01-25 14:30',
-            })
+            }, format='%Y-%m-%d %H:%M')
         }
         error_messages ={
             'title': {'required': str(EmptyFieldErrorMessage('title'))},

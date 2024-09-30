@@ -1,10 +1,13 @@
+import datetime
+
 from selenium.webdriver.common.by import By
 from selenium.webdriver.common.keys import Keys
 
+from tasks.tests.base import UnitTest
 from .base import FunctionalTest
 
 
-class NewVisitorTest(FunctionalTest):
+class TaskCreationTest(FunctionalTest):
     def test_can_create_a_task(self):
         # User goes to homepage of the task management web-application
         self.browser.get(self.live_server_url)
@@ -145,16 +148,17 @@ class NewVisitorTest(FunctionalTest):
             performers='Vladislav Troshchiy',
             deadline='2024-10-02 20:00'
         )
+        buy_tea_created_at = datetime.datetime.now()
         self.wait_for_item_in_tasks_list('Buy tea')
 
         # Then user adds task "Brew the tea"
         self.add_task(
             title='Brew the tea',
-            description='Place 10g of tea into the 500ml tea pot, '
-                        'pour the heated water and steep tea between 3 to 5 minutes.',
-            performers='Vladislav Troshchiy',
+            description='Place 10g of tea into the tea pot and steep tea between 3 to 5 minutes.',
+            performers='Vlad Troshchiy',
             deadline='2024-10-03 13:00'
         )
+        brew_the_tea_created_at = datetime.datetime.now()
         self.wait_for_item_in_tasks_list('Brew the tea')
 
         # User wants to see detail info about the "Buy tea" task, so he hits on the "Brew tea" list item at the sidebar
@@ -163,12 +167,31 @@ class NewVisitorTest(FunctionalTest):
         )
         buy_tea_li.click()
 
-        # The page shows the "Buy tea" task info
+        # The page shows the "Buy tea" task info including title, description, performers, deadline and created date
         task_detail_form = self.wait_for(
             lambda: self.browser.find_element(By.ID, 'task-detail')
         )
         title = task_detail_form.find_element(By.ID, 'id_title')
         self.assertEqual('Buy tea', title.get_attribute('value'))
+
+        description = task_detail_form.find_element(By.ID, 'id_description')
+        self.assertEqual(
+            'Go to the tea shop and buy puer tea',
+            description.get_attribute('value')
+        )
+
+        performers = task_detail_form.find_element(By.ID, 'id_performers')
+        self.assertEqual('Vladislav Troshchiy', performers.get_attribute('value'))
+
+        deadline = task_detail_form.find_element(By.ID, 'id_deadline')
+        self.assertEqual('2024-10-02 20:00', deadline.get_attribute('value'))
+
+        created_at_value = task_detail_form.find_element(By.ID, 'id_created_at').text
+        self.assertAlmostEqual(
+            datetime.datetime.strptime(created_at_value, UnitTest.DATETIME_FORMAT),
+            buy_tea_created_at,
+            delta=datetime.timedelta(minutes=1)
+        )
 
         # Then user wants to see detail info about the "Brew the tea" task, and he hits on the list item
         brew_the_tea_li = self.wait_for(
@@ -177,12 +200,34 @@ class NewVisitorTest(FunctionalTest):
         brew_the_tea_li.click()
 
         # And the page shows the detail info
-        task_info_form = self.wait_for(
+        task_detail_form = self.wait_for(
             lambda: self.browser.find_element(By.ID, 'task-detail')
         )
-        title = task_info_form.find_element(By.ID, 'id_title')
+        title = task_detail_form.find_element(By.ID, 'id_title')
         self.assertEqual('Brew the tea', title.get_attribute('value'))
+
+        description = task_detail_form.find_element(By.ID, 'id_description')
+        self.assertEqual(
+            'Place 10g of tea into the tea pot and steep tea between 3 to 5 minutes.',
+            description.get_attribute('value')
+        )
+
+        performers = task_detail_form.find_element(By.ID, 'id_performers')
+        self.assertEqual('Vlad Troshchiy', performers.get_attribute('value'))
+
+        deadline = task_detail_form.find_element(By.ID, 'id_deadline')
+        self.assertEqual('2024-10-03 13:00', deadline.get_attribute('value'))
+
+        created_at_value = task_detail_form.find_element(By.ID, 'id_created_at').text
+        self.assertAlmostEqual(
+            datetime.datetime.strptime(created_at_value, UnitTest.DATETIME_FORMAT),
+            brew_the_tea_created_at,
+            delta=datetime.timedelta(minutes=1)
+        )
 
         # User noticed that now there are no info about the "Buy tea" task
         content = self.browser.find_element(By.ID, 'content')
         self.assertNotIn('Buy tea', content.get_attribute('innerHTML'))
+        self.assertNotIn('Go to the tea shop and buy puer tea', content.get_attribute('innerHTML'))
+        self.assertNotIn('Vladislav Troshchiy', content.get_attribute('innerHTML'))
+        self.assertNotIn('2024-10-02 20:00', content.get_attribute('innerHTML'))

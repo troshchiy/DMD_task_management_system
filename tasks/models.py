@@ -6,3 +6,4 @@ class Task(models.Model):
     description = models.TextField()
     performers = models.TextField()
     deadline = models.DateTimeField()
+    created_at = models.DateTimeField(auto_now_add=True)

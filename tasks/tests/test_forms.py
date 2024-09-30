@@ -5,17 +5,17 @@ from .base import UnitTest
 
 class TaskFormTest(UnitTest):
     def test_form_save(self):
-        form = TaskForm(data=UnitTest.valid_task_data)
+        form = TaskForm(data=UnitTest.VALID_TASK_DATA)
         task = form.save()
         added_task = Task.objects.first()
 
         self.assertEqual(task, added_task)
-        self.assertEqual(added_task.title, UnitTest.valid_task_data['title'])
-        self.assertEqual(added_task.description, UnitTest.valid_task_data['description'])
-        self.assertEqual(added_task.performers, UnitTest.valid_task_data['performers'])
+        self.assertEqual(added_task.title, UnitTest.VALID_TASK_DATA['title'])
+        self.assertEqual(added_task.description, UnitTest.VALID_TASK_DATA['description'])
+        self.assertEqual(added_task.performers, UnitTest.VALID_TASK_DATA['performers'])
         self.assertEqual(
-            added_task.deadline.strftime('%Y-%m-%d %H:%M'),
-            UnitTest.valid_task_data['deadline']
+            added_task.deadline.strftime(UnitTest.DATETIME_FORMAT),
+            UnitTest.VALID_TASK_DATA['deadline']
         )
 
     def test_form_renders_title_field(self):

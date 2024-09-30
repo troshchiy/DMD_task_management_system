@@ -19,17 +19,20 @@ class HomePageTest(UnitTest):
         self.assertContains(response, 'name="title"')
 
     def test_can_save_a_POST_request(self):
-        self.client.post('/', data=UnitTest.valid_task_data)
+        self.client.post('/', data=UnitTest.VALID_TASK_DATA)
 
         self.assertEqual(Task.objects.count(), 1)
         added_task = Task.objects.first()
-        self.assertEqual(added_task.title, UnitTest.valid_task_data['title'])
-        self.assertEqual(added_task.description, UnitTest.valid_task_data['description'])
-        self.assertEqual(added_task.performers, UnitTest.valid_task_data['performers'])
-        self.assertEqual(added_task.deadline.strftime('%Y-%m-%d %H:%M'), UnitTest.valid_task_data['deadline'])
+        self.assertEqual(added_task.title, UnitTest.VALID_TASK_DATA['title'])
+        self.assertEqual(added_task.description, UnitTest.VALID_TASK_DATA['description'])
+        self.assertEqual(added_task.performers, UnitTest.VALID_TASK_DATA['performers'])
+        self.assertEqual(
+            added_task.deadline.strftime(UnitTest.DATETIME_FORMAT),
+            UnitTest.VALID_TASK_DATA['deadline']
+        )
 
     def test_redirects_after_POST(self):
-        response = self.client.post('/', data=UnitTest.valid_task_data)
+        response = self.client.post('/', data=UnitTest.VALID_TASK_DATA)
         self.assertRedirects(response, '/')
 
     def test_for_invalid_input_nothing_saved_to_db(self):
@@ -81,7 +84,8 @@ class TaskDetailTest(UnitTest):
 
         form = json.loads(response.content)['form']
         expected_form = render_to_string('tasks/task_detail.html',
-                                         {'form': TaskForm(instance=task)})
+                                         {'form': TaskForm(instance=task),
+                                                    'created_at': task.created_at.strftime('%Y-%m-%d %H:%M')})
 
         self.assertEqual(form, expected_form)
 
@@ -96,6 +100,39 @@ class TaskDetailTest(UnitTest):
 
         self.assertIn(correct_task.title, form)
         self.assertNotIn(other_task.title, form)
+
+    def test_passes_correct_created_at_value_to_template(self):
+        task = self.create_task()
+        task.save()
+
+        response = self.client.get(f'/task/{task.id}/', headers={'X-Requested-With': 'XMLHttpRequest'})
+
+        form = json.loads(response.content)['form']
+        self.assertIn(task.created_at.strftime(UnitTest.DATETIME_FORMAT), form)
+
+    def assert_shows_on_page(self, member):
+        task = self.create_task()
+        task.save()
+
+        response = self.client.get(f'/task/{task.id}/', headers={'X-Requested-With': 'XMLHttpRequest'})
+
+        form = json.loads(response.content)['form']
+        self.assertIn(member, form)
+
+    def test_shows_title_field_on_page(self):
+        self.assert_shows_on_page('id="id_title"')
+
+    def test_shows_description_field_on_page(self):
+        self.assert_shows_on_page('id="id_description"')
+
+    def test_shows_performers_field_on_page(self):
+        self.assert_shows_on_page('id="id_performers"')
+
+    def test_shows_deadline_field_on_page(self):
+        self.assert_shows_on_page('id="id_deadline"')
+
+    def test_shows_created_at_field_on_page(self):
+        self.assert_shows_on_page('id="id_created_at"')
 
     def test_for_not_existing_task_id_returns_http404(self):
         response = self.client.get(f'/task/532/', headers={'X-Requested-With': 'XMLHttpRequest'})

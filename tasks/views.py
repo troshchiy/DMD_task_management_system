@@ -27,7 +27,9 @@ def task_detail(request, task_id):
         except Task.DoesNotExist:
             return HttpResponseNotFound('Not Found')
 
-        form = render_to_string('tasks/task_detail.html', {'form': TaskForm(instance=task)})
+        created_at = task.created_at.strftime('%Y-%m-%d %H:%M')
+        form = render_to_string('tasks/task_detail.html', {'form': TaskForm(instance=task),
+                                                                                    'created_at': created_at})
         return JsonResponse({'form': form})
     else:
         return HttpResponseBadRequest('Invalid request')
