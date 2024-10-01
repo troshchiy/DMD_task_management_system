@@ -1,0 +1,14 @@
+<li data-url="{% url 'task_detail' task.id %}" onclick="getTaskDetail(this);">
+    {{ task.title }}
+    {% with task.task_set.all as subtasks %}
+        {% if subtasks %}
+            <ul class="nested">
+                {% for subtask in subtasks %}
+                    {% with subtask as task %}
+                        {% include 'tasks/tree_view.html' %}
+                    {% endwith %}
+                {% endfor %}
+            </ul>
+        {% endif %}
+    {% endwith %}
+</li>

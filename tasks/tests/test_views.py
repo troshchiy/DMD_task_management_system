@@ -27,6 +27,16 @@ class HomePageTest(UnitTest):
         self.assertContains(response, 'placeholder="Performers"')
         self.assertContains(response, 'placeholder="e.g. 2025-01-25 14:30"')
 
+    def test_passes_only_tasks_with_null_parent(self):
+        task = self.create_task()
+        task.save()
+        subtask = self.create_task(parent=task)
+        subtask.save()
+
+        response = self.client.get('/')
+
+        self.assertIn(task, response.context['tasks'])
+        self.assertNotIn(subtask, response.context['tasks'])
 
 class NewTaskTest(UnitTest):
     def test_can_save_a_POST_request(self):
@@ -65,6 +75,17 @@ class NewTaskTest(UnitTest):
         self.assertContains(response, escape(str(EmptyFieldErrorMessage('description'))))
         self.assertContains(response, escape(str(EmptyFieldErrorMessage('performers'))))
         self.assertContains(response, escape(str(EmptyFieldErrorMessage('deadline'))))
+
+    def test_for_invalid_input_passes_to_template_only_tasks_with_null_parent(self):
+        task = self.create_task()
+        task.save()
+        subtask = self.create_task(parent=task)
+        subtask.save()
+
+        response = self.client.post('/tasks/new', data={})
+
+        self.assertIn(task, response.context['tasks'])
+        self.assertNotIn(subtask, response.context['tasks'])
 
 
 class NewSubtaskTest(UnitTest):
@@ -141,6 +162,17 @@ class NewSubtaskTest(UnitTest):
         self.assertContains(response, escape(str(EmptyFieldErrorMessage('description'))))
         self.assertContains(response, escape(str(EmptyFieldErrorMessage('performers'))))
         self.assertContains(response, escape(str(EmptyFieldErrorMessage('deadline'))))
+
+    def test_for_invalid_input_passes_to_template_only_tasks_with_null_parent(self):
+        task = self.create_task()
+        task.save()
+        subtask = self.create_task(parent=task)
+        subtask.save()
+
+        response = self.post_invalid_input()
+
+        self.assertIn(task, response.context['tasks'])
+        self.assertNotIn(subtask, response.context['tasks'])
 
 
 class TaskDetailTest(UnitTest):
@@ -253,3 +285,14 @@ class TaskDetailTest(UnitTest):
         response = self.client.get('/tasks/532/')
         self.assertEqual(response.status_code, 404)
         self.assertIn( 'Not Found', response.content.decode('utf8'))
+
+    def test_passes_to_home_template_only_tasks_with_null_parent(self):
+        task = self.create_task()
+        task.save()
+        subtask = self.create_task(parent=task)
+        subtask.save()
+
+        response = self.client.get(f'/tasks/{task.id}/')
+
+        self.assertIn(task, response.context['tasks'])
+        self.assertNotIn(subtask, response.context['tasks'])

@@ -7,7 +7,8 @@ from .forms import TaskForm
 
 
 def home_page(request):
-    return render(request,'tasks/home.html', {'task_form': TaskForm(), 'tasks': Task.objects.all()})
+    return render(request,'tasks/home.html', {'task_form': TaskForm(),
+                                              'tasks': Task.objects.filter(parent__isnull=True)})
 
 
 def new_task(request):
@@ -16,7 +17,8 @@ def new_task(request):
         task_form.save()
         return redirect('/')
     else:
-        return render(request,'tasks/home.html', {'task_form': task_form, 'tasks': Task.objects.all()})
+        return render(request,'tasks/home.html', {'task_form': task_form,
+                                                  'tasks': Task.objects.filter(parent__isnull=True)})
 
 
 def new_subtask(request, task_id):
@@ -35,7 +37,7 @@ def new_subtask(request, task_id):
                                                     'created_at': task.created_at.strftime('%Y-%m-%d %H:%M')
                                                     },
                                                 'subtask_form': subtask_form,
-                                                'tasks': Task.objects.all()
+                                                'tasks': Task.objects.filter(parent__isnull=True)
                                                })
 
 
@@ -67,5 +69,5 @@ def task_detail(request, task_id):
                               'created_at': task.created_at.strftime('%Y-%m-%d %H:%M')
                           },
                           'subtask_form': TaskForm(),
-                          'tasks': Task.objects.all()
+                          'tasks': Task.objects.filter(parent__isnull=True)
                       })
