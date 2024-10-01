@@ -71,3 +71,8 @@ class TaskModelTest(UnitTest):
 
         task = Task.objects.first()
         self.assertAlmostEqual(task.created_at, timezone.now(), delta=datetime.timedelta(seconds=1))
+
+    def test_get_absolute_url(self):
+        task = self.create_task()
+        task.save()
+        self.assertEqual(task.get_absolute_url(), f'/tasks/{task.id}/')

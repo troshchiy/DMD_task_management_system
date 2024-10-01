@@ -212,11 +212,26 @@ class TaskCreationTest(FunctionalTest):
         # The page shows the "Buy tea" task details including title, description, performers, deadline and created date
         self.assert_task_details_equals_to(**buy_tea_task_data, created_at=buy_tea_created_at)
 
+        # User noticed that the current URL has changed to my-site.com/tasks/1/
+        buy_tea_taks_url = self.browser.current_url
+        self.assertEqual(
+            buy_tea_taks_url,
+            self.live_server_url + '/tasks/1/'
+        )
+
         # Then user wants to see detail info about the "Brew the tea" task, and he hits on the list item
         self.wait_for_item_in_tasks_list('Brew the tea').click()
 
         # And the page shows the detail info
         self.assert_task_details_equals_to(**brew_the_tea_task_data, created_at=brew_the_tea_created_at)
+
+        # And current URL has changed, and now it looks like my-site.com/tasks/2/
+        brew_the_tea_task_url = self.browser.current_url
+        self.assertEqual(
+            brew_the_tea_task_url,
+            self.live_server_url + '/tasks/2/'
+        )
+        self.assertNotEqual(buy_tea_taks_url, brew_the_tea_task_url)
 
         # User noticed that now there are no info about the "Buy tea" task
         content = self.browser.find_element(By.ID, 'content')

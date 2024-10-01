@@ -31,6 +31,6 @@ def task_detail(request, task_id):
         form = render_to_string('tasks/task_detail.html', {'form': TaskForm(instance=task),
                                                                                     'created_at': created_at,
                                                                                     'add_subtask_form': TaskForm()})
-        return JsonResponse({'form': form})
+        return JsonResponse({'form': form, 'url': task.get_absolute_url()})
     else:
         return HttpResponseBadRequest('Invalid request')

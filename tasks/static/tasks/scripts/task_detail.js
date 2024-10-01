@@ -13,5 +13,6 @@ function getTaskDetail(tasksListItem) {
     .then(response => response.json())
     .then(data => {
         taskDetailContainer.innerHTML = data['form'];
+        window.history.replaceState(null, document.title, data['url']);
     });
 }

@@ -114,6 +114,15 @@ class TaskDetailTest(UnitTest):
         form = json.loads(response.content)['form']
         self.assertIn(task.created_at.strftime(UnitTest.DATETIME_FORMAT), form)
 
+    def test_passes_correct_url_to_ajax_response(self):
+        task = self.create_task()
+        task.save()
+
+        response = self.client.get(f'/tasks/{task.id}/', headers={'X-Requested-With': 'XMLHttpRequest'})
+
+        url = json.loads(response.content)['url']
+        self.assertEqual(url, f'/tasks/{task.id}/')
+
     def test_shows_task_detail_form_on_page(self):
         task = self.create_task()
         task.save()
