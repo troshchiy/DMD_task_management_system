@@ -1,4 +1,5 @@
 import json
+import re
 
 from django.template.loader import render_to_string
 from django.utils.html import escape
@@ -85,7 +86,8 @@ class TaskDetailTest(UnitTest):
         form = json.loads(response.content)['form']
         expected_form = render_to_string('tasks/task_detail.html',
                                          {'form': TaskForm(instance=task),
-                                                    'created_at': task.created_at.strftime('%Y-%m-%d %H:%M')})
+                                                    'created_at': task.created_at.strftime('%Y-%m-%d %H:%M'),
+                                                    'add_subtask_form': TaskForm()})
 
         self.assertEqual(form, expected_form)
 
@@ -110,29 +112,36 @@ class TaskDetailTest(UnitTest):
         form = json.loads(response.content)['form']
         self.assertIn(task.created_at.strftime(UnitTest.DATETIME_FORMAT), form)
 
-    def assert_shows_on_page(self, member):
+    def test_shows_task_detail_form_on_page(self):
         task = self.create_task()
         task.save()
 
         response = self.client.get(f'/task/{task.id}/', headers={'X-Requested-With': 'XMLHttpRequest'})
 
         form = json.loads(response.content)['form']
-        self.assertIn(member, form)
+        self.assertIn('id="task-detail"', form)
+        add_task_form = re.findall('<form id="task-detail".*?</form>',
+                                   form.replace('\t', ' ').replace('\n', ' '))[0]
+        self.assertIn('id="id_title"', add_task_form)
+        self.assertIn('id="id_description"', add_task_form)
+        self.assertIn('id="id_performers"', add_task_form)
+        self.assertIn('id="id_deadline"', add_task_form)
+        self.assertIn('id="id_created_at"', add_task_form)
 
-    def test_shows_title_field_on_page(self):
-        self.assert_shows_on_page('id="id_title"')
+    def test_shows_add_subtask_form_on_page(self):
+        task = self.create_task()
+        task.save()
 
-    def test_shows_description_field_on_page(self):
-        self.assert_shows_on_page('id="id_description"')
+        response = self.client.get(f'/task/{task.id}/', headers={'X-Requested-With': 'XMLHttpRequest'})
 
-    def test_shows_performers_field_on_page(self):
-        self.assert_shows_on_page('id="id_performers"')
-
-    def test_shows_deadline_field_on_page(self):
-        self.assert_shows_on_page('id="id_deadline"')
-
-    def test_shows_created_at_field_on_page(self):
-        self.assert_shows_on_page('id="id_created_at"')
+        form = json.loads(response.content)['form']
+        self.assertIn('id="add-subtask"', form)
+        add_subtask_form = re.findall('<form id="add-subtask".*?</form>',
+                                   form.replace('\t', ' ').replace('\n', ' '))[0]
+        self.assertIn('id="id_title"', add_subtask_form)
+        self.assertIn('id="id_description"', add_subtask_form)
+        self.assertIn('id="id_performers"', add_subtask_form)
+        self.assertIn('id="id_deadline"', add_subtask_form)
 
     def test_for_not_existing_task_id_returns_http404(self):
         response = self.client.get(f'/task/532/', headers={'X-Requested-With': 'XMLHttpRequest'})

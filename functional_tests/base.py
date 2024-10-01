@@ -35,8 +35,12 @@ class FunctionalTest(StaticLiveServerTestCase):
             try:
                 tasks_list = self.browser.find_element(By.ID, 'tasks-list')
                 items = tasks_list.find_elements(By.TAG_NAME, 'li')
-                self.assertIn(item_text, [item.text for item in items])
-                return
+
+                for item in items:
+                    if item.text == item_text:
+                        return item
+
+                self.fail(f'{item_text} not found in {[item.text for item in items]}')
             except (AssertionError, WebDriverException) as e:
                 if time.time() - start_time > MAX_WAIT:
                     raise e

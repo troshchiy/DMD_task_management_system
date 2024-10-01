@@ -29,7 +29,8 @@ def task_detail(request, task_id):
 
         created_at = task.created_at.strftime('%Y-%m-%d %H:%M')
         form = render_to_string('tasks/task_detail.html', {'form': TaskForm(instance=task),
-                                                                                    'created_at': created_at})
+                                                                                    'created_at': created_at,
+                                                                                    'add_subtask_form': TaskForm()})
         return JsonResponse({'form': form})
     else:
         return HttpResponseBadRequest('Invalid request')

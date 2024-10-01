@@ -6,7 +6,7 @@
 {% block sidebar %}
     <ul id="tasks-list">
         {% for task in tasks %}
-        <li data-url="{% url 'task_detail' task.id %}" onclick="getTaskDetail(this);"><a>{{ task.title }}</a></li>
+        <li data-url="{% url 'task_detail' task.id %}" onclick="getTaskDetail(this);">{{ task.title }}</li>
         {% endfor %}
     </ul>
 {% endblock %}
