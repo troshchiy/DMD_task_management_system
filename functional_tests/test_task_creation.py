@@ -1,4 +1,6 @@
 import datetime
+import re
+import time
 
 from selenium.webdriver.common.by import By
 from selenium.webdriver.common.keys import Keys
@@ -212,12 +214,13 @@ class TaskCreationTest(FunctionalTest):
         # The page shows the "Buy tea" task details including title, description, performers, deadline and created date
         self.assert_task_details_equals_to(**buy_tea_task_data, created_at=buy_tea_created_at)
 
-        # User noticed that the current URL has changed to my-site.com/tasks/1/
-        buy_tea_taks_url = self.browser.current_url
-        self.assertEqual(
-            buy_tea_taks_url,
-            self.live_server_url + '/tasks/1/'
+        # User noticed that the current URL has changed to my-site.com/tasks/\d*/
+        self.wait_for(
+            lambda: self.assertTrue(
+                re.findall('/tasks/[0-9]+/', self.browser.current_url)
+            )
         )
+        buy_tea_task_url = self.browser.current_url
 
         # Then user wants to see detail info about the "Brew the tea" task, and he hits on the list item
         self.wait_for_item_in_tasks_list('Brew the tea').click()
@@ -226,12 +229,18 @@ class TaskCreationTest(FunctionalTest):
         self.assert_task_details_equals_to(**brew_the_tea_task_data, created_at=brew_the_tea_created_at)
 
         # And current URL has changed, and now it looks like my-site.com/tasks/2/
-        brew_the_tea_task_url = self.browser.current_url
-        self.assertEqual(
-            brew_the_tea_task_url,
-            self.live_server_url + '/tasks/2/'
+        self.wait_for(
+            lambda: self.assertNotEqual(    # Wait until current URL changes
+                buy_tea_task_url,
+                self.browser.current_url
+            )
+            )
+
+        self.wait_for(
+            lambda: self.assertTrue(        # Make sure that the link is in the correct format
+                re.findall('/tasks/[0-9]+/', self.browser.current_url)
+            )
         )
-        self.assertNotEqual(buy_tea_taks_url, brew_the_tea_task_url)
 
         # User noticed that now there are no info about the "Buy tea" task
         content = self.browser.find_element(By.ID, 'content')

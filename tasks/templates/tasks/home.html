@@ -14,16 +14,20 @@
 {% block content %}
     <form id="add-task" method="POST" action="{% url 'new_task' %}">
         {% csrf_token %}
-        {{ form.errors }}
-        {{ form.title }}
-        {{ form.description }}
-        {{ form.performers }}
+        {{ task_form.errors }}
+        {{ task_form.title }}
+        {{ task_form.description }}
+        {{ task_form.performers }}
         <div id="deadline">
-            <label for="id_deadline">{{ form.deadline.label }}:</label>
-            {{ form.deadline }}
+            <label for="id_deadline">{{ task_form.deadline.label }}:</label>
+            {{ task_form.deadline }}
         </div>
         <input type="submit" id="add-task-btn" value="Add">
     </form>
-    <div id="task-detail-container"></div>
+    <div id="task-detail-container">
+        {% if task_detail %}
+            {% include 'tasks/task_detail.html' %}
+        {% endif %}
+    </div>
     <script src="{% static 'tasks/scripts/task_detail.js' %}"></script>
 {% endblock %}

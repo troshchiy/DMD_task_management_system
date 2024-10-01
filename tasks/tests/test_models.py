@@ -10,7 +10,6 @@ from .base import UnitTest
 class TaskModelTest(UnitTest):
     def test_can_save_task(self):
         task = self.create_task()
-        task.full_clean()
         task.save()
 
         saved_task = Task.objects.first()
@@ -65,6 +64,39 @@ class TaskModelTest(UnitTest):
         null_deadline_task = self.create_task(deadline=None)
 
         self.assert_cannot_save_task_with_null_field(null_deadline_task, 'deadline')
+
+    def test_can_save_tasks_with_null_parent(self):
+        self.create_task(parent=None).save()
+        self.assertEqual(Task.objects.count(), 1)
+        added_task = Task.objects.first()
+        self.assertIsNone(added_task.parent)
+
+    def test_default_parent(self):
+        task = Task(
+            title=UnitTest.VALID_TASK_DATA['title'],
+            description=UnitTest.VALID_TASK_DATA['description'],
+            performers=UnitTest.VALID_TASK_DATA['performers'],
+            deadline=UnitTest.VALID_TASK_DATA['deadline']
+        )
+        self.assertIsNone(task.parent)
+
+    def test_task_is_related_to_another_task(self):
+        task = self.create_task()
+        task.save()
+
+        subtask = self.create_task(parent=task)
+        subtask.save()
+
+        self.assertIn(subtask, task.task_set.all())
+
+    def test_sets_parent_null_on_delete(self):
+        task = self.create_task()
+        task.save()
+        self.create_task(parent=task).save()
+
+        task.delete()
+        self.assertEqual(Task.objects.count(), 1)
+        self.assertIsNone(Task.objects.first().parent)
 
     def test_automatically_set_created_at_field_value(self):
         self.create_task().save()

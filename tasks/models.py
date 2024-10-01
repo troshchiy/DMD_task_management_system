@@ -3,6 +3,7 @@ from django.urls import reverse
 
 
 class Task(models.Model):
+    parent = models.ForeignKey('self', null=True, default=None, on_delete=models.SET_NULL)
     title = models.TextField()
     description = models.TextField()
     performers = models.TextField()

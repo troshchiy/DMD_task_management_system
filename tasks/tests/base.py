@@ -16,9 +16,10 @@ class UnitTest(TestCase):
                     title=VALID_TASK_DATA['title'],
                     description=VALID_TASK_DATA['description'],
                     performers=VALID_TASK_DATA['performers'],
-                    deadline=VALID_TASK_DATA['deadline']
+                    deadline=VALID_TASK_DATA['deadline'],
+                    parent=None
                     ):
-        return Task(title=title, description=description, performers=performers, deadline=deadline)
+        return Task(title=title, description=description, performers=performers, deadline=deadline, parent=parent)
 
     def create_task_form_with_data(self,
                                    title=VALID_TASK_DATA['title'],
