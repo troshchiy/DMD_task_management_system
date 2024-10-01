@@ -1,8 +1,9 @@
 from django.urls import path
 
-from tasks.views import home_page, task_detail
+from tasks import views
+from tasks.views import new_task
 
 urlpatterns = [
-    path('', home_page, name='home'),
-    path('task/<int:task_id>/', task_detail, name='task_detail'),
+    path('new', views.new_task, name='new_task'),
+    path('<int:task_id>/', views.task_detail, name='task_detail'),
 ]

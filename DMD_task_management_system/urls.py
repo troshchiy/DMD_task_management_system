@@ -18,8 +18,10 @@ from django.contrib import admin
 from django.urls import path, include
 
 from tasks import urls as tasks_urls
+from tasks import views as tasks_views
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('', include(tasks_urls)),
+    path('tasks/', include(tasks_urls)),
+    path('', tasks_views.home_page, name='home'),
 ]

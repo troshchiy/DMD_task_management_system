@@ -12,7 +12,7 @@
 {% endblock %}
 
 {% block content %}
-    <form id="add-task" method="POST">
+    <form id="add-task" method="POST" action="{% url 'new_task' %}">
         {% csrf_token %}
         {{ form.errors }}
         {{ form.title }}

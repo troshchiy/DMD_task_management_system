@@ -7,16 +7,16 @@ from .forms import TaskForm
 
 
 def home_page(request):
-    form = TaskForm()
+    return render(request,'tasks/home.html', {'form': TaskForm(), 'tasks': Task.objects.all()})
 
-    if request.method == 'POST':
-        form = TaskForm(data=request.POST)
-        if form.is_valid():
-            form.save()
-            return redirect('/')
 
-    tasks = Task.objects.all()
-    return render(request,'tasks/home.html', {'form': form, 'tasks': tasks})
+def new_task(request):
+    form = TaskForm(data=request.POST)
+    if form.is_valid():
+        form.save()
+        return redirect('/')
+    else:
+        return render(request,'tasks/home.html', {'form': form, 'tasks': Task.objects.all()})
 
 
 def task_detail(request, task_id):
