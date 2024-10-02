@@ -34,7 +34,7 @@ class FunctionalTest(StaticLiveServerTestCase):
         while True:
             try:
                 tasks_list = self.browser.find_element(By.ID, 'tasks-list')
-                items = tasks_list.find_elements(By.TAG_NAME, 'li')
+                items = tasks_list.find_elements(By.CLASS_NAME, 'task-title')
 
                 for item in items:
                     if item.text == item_text:

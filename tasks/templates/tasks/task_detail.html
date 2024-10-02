@@ -5,6 +5,14 @@
     {{ task_detail.form.deadline }}
     <div id="id_created_at">{{ task_detail.created_at }}</div>
 </form>
+<div id="subtasks">
+    <h1>Subtasks</h1>
+    <ul id="subtasks-list">
+        {% for task in task_detail.form.instance.task_set.all %}
+            {% include 'tasks/tree_view.html' %}
+        {% endfor %}
+    </ul>
+</div>
 <form id="add-subtask" method="POST" action="{% url 'new_subtask' task_detail.form.instance.id %}">
     {% csrf_token %}
     {{ subtask_form.errors }}

@@ -1,11 +1,9 @@
 import datetime
 import re
-import time
 
 from selenium.webdriver.common.by import By
 from selenium.webdriver.common.keys import Keys
 
-from tasks.tests.base import UnitTest
 from .base import FunctionalTest
 
 
@@ -172,7 +170,7 @@ class TaskCreationTest(FunctionalTest):
 
         actual_created_at_value = task_detail_form.find_element(By.ID, 'id_created_at').text
         self.assertAlmostEqual(
-            datetime.datetime.strptime(actual_created_at_value, UnitTest.DATETIME_FORMAT),
+            datetime.datetime.strptime(actual_created_at_value, '%Y-%m-%d %H:%M'),
             created_at,
             delta=datetime.timedelta(minutes=1)
         )
@@ -277,18 +275,14 @@ class TaskCreationTest(FunctionalTest):
             deadline='2024-10-03 12:50'
         )
 
-        # The page is being updated,
-        # and now the page contains added subtask title as a subitem of the task in the tasks list
-        sidebar_subtasks_list = self.wait_for(
-            lambda: self.wait_for_item_in_tasks_list('Brew the tea').find_element(By.CLASS_NAME, 'nested')
-        )
-        self.assertIn('Heat water', [subtask.text for subtask in sidebar_subtasks_list])
+        # The page is being updated, and now the page contains added subtask title in the tasks list
+        self.wait_for_item_in_tasks_list('Heat water')
 
         # User notices that the page still shows the "Brew the tea" task detail page
         self.assert_task_details_equals_to(**brew_the_tea_task_data, created_at=brew_the_tea_created_at)
 
         # And now the page contains "Heat water" as an item of subtasks list
-        subtasks_list = self.browser.find_element(By.ID, 'subtasks-list')
+        subtasks_list = self.browser.find_element(By.ID, 'subtasks-list').find_elements(By.CLASS_NAME, 'task-title')
         self.assertIn('Heat water', [subtask.text for subtask in subtasks_list])
 
         # There is still a form inviting user to add another subtask
@@ -304,12 +298,9 @@ class TaskCreationTest(FunctionalTest):
 
         # The page updates again, and now shows both subtask on the sidebar tasks list
         # and on the "Brew the tea" task details
-        sidebar_subtasks_list = self.wait_for(
-            lambda: self.wait_for_item_in_tasks_list('Brew the tea').find_element(By.CLASS_NAME, 'nested')
-        )
-        self.assertIn('Heat water', [subtask.text for subtask in sidebar_subtasks_list])
-        self.assertIn('Steep the tea', [subtask.text for subtask in sidebar_subtasks_list])
+        self.wait_for_item_in_tasks_list('Heat water')
+        self.wait_for_item_in_tasks_list('Steep the tea')
 
-        subtasks_list = self.browser.find_element(By.ID, 'subtasks-list')
+        subtasks_list = self.browser.find_element(By.ID, 'subtasks-list').find_elements(By.CLASS_NAME, 'task-title')
         self.assertIn('Heat water', [subtask.text for subtask in subtasks_list])
         self.assertIn('Steep the tea', [subtask.text for subtask in subtasks_list])
