@@ -255,25 +255,25 @@ class TaskDetailTest(UnitTest):
 
         form = json.loads(ajax_response.content)['form']
         self.assertIn('id="task-detail"', form)
-        add_task_form = re.findall('<form id="task-detail".*?</form>',
+        task_detail_form = re.findall('<form id="task-detail".*?</form>',
                                    form.replace('\t', ' ').replace('\n', ' '))[0]
-        self.assertIn('id="id_title"', add_task_form)
-        self.assertIn('id="id_description"', add_task_form)
-        self.assertIn('id="id_performers"', add_task_form)
-        self.assertIn('id="id_deadline"', add_task_form)
-        self.assertIn('id="id_created_at"', add_task_form)
-        self.assertIn('class="submit-btn"', add_task_form)
+        self.assertIn('id="id_title"', task_detail_form)
+        self.assertIn('id="id_description"', task_detail_form)
+        self.assertIn('id="id_performers"', task_detail_form)
+        self.assertIn('id="id_deadline"', task_detail_form)
+        self.assertIn('id="id_created_at"', task_detail_form)
+        self.assertIn('class="submit-btn"', task_detail_form)
 
         response = self.client.get(f'/tasks/{task.id}/').content.decode('utf8')
         self.assertIn('id="task-detail"', response)
-        add_task_form = re.findall('<form id="task-detail".*?</form>',
+        task_detail_form = re.findall('<form id="task-detail".*?</form>',
                                    response.replace('\t', ' ').replace('\n', ' '))[0]
-        self.assertIn('id="id_title"', add_task_form)
-        self.assertIn('id="id_description"', add_task_form)
-        self.assertIn('id="id_performers"', add_task_form)
-        self.assertIn('id="id_deadline"', add_task_form)
-        self.assertIn('id="id_created_at"', add_task_form)
-        self.assertIn('class="submit-btn"', add_task_form)
+        self.assertIn('id="id_title"', task_detail_form)
+        self.assertIn('id="id_description"', task_detail_form)
+        self.assertIn('id="id_performers"', task_detail_form)
+        self.assertIn('id="id_deadline"', task_detail_form)
+        self.assertIn('id="id_created_at"', task_detail_form)
+        self.assertIn('class="submit-btn"', task_detail_form)
 
     def test_shows_add_subtask_form_on_page(self):
         task = self.create_task()
@@ -334,11 +334,105 @@ class TaskDetailTest(UnitTest):
         self.client.post(f'/tasks/{task.id}/', data=new_data)
         self.assertEqual(Task.objects.count(), 1)
 
-        self.assertEqual(task, Task.objects.first())
-        self.assertEqual(task.title, new_data['title'])
-        self.assertEqual(task.description, new_data['description'])
-        self.assertEqual(task.performers, new_data['performers'])
+
+        edited_task = Task.objects.first()
+        self.assertEqual(task, edited_task)
+        self.assertEqual(edited_task.title, new_data['title'])
+        self.assertEqual(edited_task.description, new_data['description'])
+        self.assertEqual(edited_task.performers, new_data['performers'])
         self.assertEqual(
-            task.deadline.strftime(UnitTest.DATETIME_FORMAT),
+            edited_task.deadline.strftime(UnitTest.DATETIME_FORMAT),
             new_data['deadline']
         )
+
+    def test_redirects_after_POST(self):
+        task = self.create_task()
+        task.save()
+
+        new_data = {
+            'title': 'New title',
+            'description': 'New Description',
+            'performers': 'New performers',
+            'deadline': '2021-09-13 15:00'
+        }
+        response = self.client.post(f'/tasks/{task.id}/', data=new_data)
+        self.assertRedirects(response, f'/tasks/{task.id}/')
+
+    def post_invalid_input(self):
+        task = self.create_task()
+        task.save()
+        return self.client.post(f'/tasks/{task.id}/', data={})
+
+    def test_for_invalid_input_doesnt_change_task(self):
+        task_data = {
+            'title': 'Old title',
+            'description': 'Old Description',
+            'performers': 'Old performers',
+            'deadline': '2021-09-13 15:00'
+        }
+
+        task = self.create_task(
+            title=task_data['title'],
+            description=task_data['description'],
+            performers=task_data['performers'],
+            deadline=task_data['deadline']
+        )
+        task.save()
+
+        self.client.post(f'/tasks/{task.id}/', data={})
+
+        edit_task = Task.objects.first()
+        self.assertEqual(edit_task.title, task_data['title'])
+        self.assertEqual(edit_task.description, task_data['description'])
+        self.assertEqual(edit_task.performers, task_data['performers'])
+        self.assertEqual(edit_task.deadline.strftime('%Y-%m-%d %H:%M'), task_data['deadline'])
+
+    def test_for_invalid_input_renders_home_template(self):
+        response = self.post_invalid_input()
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'tasks/home.html')
+
+    def test_for_invalid_input_passes_task_form_to_template(self):
+        response = self.post_invalid_input()
+        self.assertIsInstance(response.context['task_form'], TaskForm)
+
+    def test_for_invalid_input_passes_task_detail_form_to_template(self):
+        response = self.post_invalid_input()
+        self.assertIsInstance(response.context['task_detail']['form'], TaskForm)
+
+    def test_for_invalid_input_passes_subtask_form_to_template(self):
+        response = self.post_invalid_input()
+        self.assertIsInstance(response.context['subtask_form'], TaskForm)
+
+    def test_for_invalid_input_shows_errors_on_page(self):
+        response = self.post_invalid_input().content.decode('utf8')
+
+        task_detail_form = re.findall('<form id="task-detail".*?</form>',
+                                   response.replace('\t', ' ').replace('\n', ' '))[0]
+        self.assertIn(
+            escape(str(EmptyFieldErrorMessage('title'))),
+            task_detail_form
+        )
+        self.assertIn(
+            escape(str(EmptyFieldErrorMessage('description'))),
+            task_detail_form
+        )
+        self.assertIn(
+            escape(str(EmptyFieldErrorMessage('performers'))),
+            task_detail_form
+        )
+        self.assertIn(
+            escape(str(EmptyFieldErrorMessage('deadline'))),
+            task_detail_form
+        )
+
+    def test_for_invalid_input_passes_to_template_only_tasks_with_null_parent(self):
+        task = self.create_task()
+        task.save()
+        subtask = self.create_task(parent=task)
+        subtask.save()
+
+        response = self.post_invalid_input()
+
+        self.assertIn(task, response.context['tasks'])
+        self.assertNotIn(subtask, response.context['tasks'])

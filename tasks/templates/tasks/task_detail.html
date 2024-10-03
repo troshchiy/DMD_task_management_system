@@ -1,5 +1,6 @@
 <form id="task-detail" method="POST" action="{% url 'task_detail' task_detail.form.instance.id %}">
     {% csrf_token %}
+    {{ task_detail.form.errors }}
     {{ task_detail.form.title }}
     {{ task_detail.form.description }}
     {{ task_detail.form.performers }}
