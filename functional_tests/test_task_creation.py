@@ -58,9 +58,10 @@ class TaskCreationTest(FunctionalTest):
         # User set a deadline
         deadline_inputbox.send_keys('2024-10-02 20:00')
 
-        # When user hits on the "Add" button, the page update,
+        # When user hits on the "Add task" button, the page update,
         # and now the page contains "Buy tea" as an item in a tasks lists
-        add_task_btn = self.browser.find_element(By.ID, 'add-task-btn')
+        add_task_btn = self.browser.find_element(By.CLASS_NAME, 'submit-btn')
+        self.assertEqual(add_task_btn.get_attribute('value'), 'Add task')
         add_task_btn.click()
         self.wait_for_item_in_tasks_list('Buy tea')
 
@@ -103,7 +104,8 @@ class TaskCreationTest(FunctionalTest):
             title='Buy tea',
             description='Go to the tea shop and buy puer tea',
             performers='Vladislav Troshchiy',
-            deadline='2024-10-02 20:00'
+            deadline='2024-10-02 20:00',
+            submit=False
         )
         self.wait_for(lambda: self.browser.find_element(By.CSS_SELECTOR, '#id_title:valid'))
         self.wait_for(lambda: self.browser.find_element(By.CSS_SELECTOR, '#id_description:valid'))
@@ -138,7 +140,8 @@ class TaskCreationTest(FunctionalTest):
             description='Place 10g of tea into the 500ml tea pot, '
                         'pour the heated water and steep tea between 3 to 5 minutes.',
             performers='Vladislav Troshchiy',
-            deadline='2024-10-03 13:00'
+            deadline='2024-10-03 13:00',
+            submit=False
         )
         self.wait_for(lambda: self.browser.find_element(By.CSS_SELECTOR, '#id_title:valid'))
         self.wait_for(lambda: self.browser.find_element(By.CSS_SELECTOR, '#id_description:valid'))
@@ -148,32 +151,6 @@ class TaskCreationTest(FunctionalTest):
         self.get_new_task_element_by_id('id_title').send_keys(Keys.ENTER)
         self.wait_for_item_in_tasks_list('Buy tea')
         self.wait_for_item_in_tasks_list('Brew the tea')
-
-    def assert_task_details_equals_to(self, title, description, performers, deadline, created_at):
-        task_detail_form = self.wait_for(
-            lambda: self.browser.find_element(By.ID, 'task-detail')
-        )
-        actual_title = task_detail_form.find_element(By.ID, 'id_title')
-        self.assertEqual(title, actual_title.get_attribute('value'))
-
-        actual_description = task_detail_form.find_element(By.ID, 'id_description')
-        self.assertEqual(
-            description,
-            actual_description.get_attribute('value')
-        )
-
-        actual_performers = task_detail_form.find_element(By.ID, 'id_performers')
-        self.assertEqual(performers, actual_performers.get_attribute('value'))
-
-        actual_deadline = task_detail_form.find_element(By.ID, 'id_deadline')
-        self.assertEqual(deadline, actual_deadline.get_attribute('value'))
-
-        actual_created_at_value = task_detail_form.find_element(By.ID, 'id_created_at').text
-        self.assertAlmostEqual(
-            datetime.datetime.strptime(actual_created_at_value, '%Y-%m-%d %H:%M'),
-            created_at,
-            delta=datetime.timedelta(minutes=1)
-        )
 
     def test_can_view_task_details(self):
         # User goes to homepage
@@ -266,14 +243,18 @@ class TaskCreationTest(FunctionalTest):
         # Page offers to enter a title, description, performers and deadline to add a subtask
         add_subtask_form = self.wait_for(lambda: self.browser.find_element(By.ID, 'add-subtask'))
 
-        # User enters data and submit the form
+        # User enters data and submit the form via 'Add subtask' button
         self.add_task(
             form=add_subtask_form,
             title='Heat water',
             description='Heat water to 94 degrees C',
             performers='Troshchiy Vladislav',
-            deadline='2024-10-03 12:50'
+            deadline='2024-10-03 12:50',
+            submit=False
         )
+        add_subtask_btn = add_subtask_form.find_element(By.CLASS_NAME, 'submit-btn')
+        self.assertEqual(add_subtask_btn.get_property('value'), 'Add subtask')
+        add_subtask_btn.click()
 
         # The page is being updated, and now the page contains added subtask title in the tasks list
         self.wait_for_item_in_tasks_list('Heat water')

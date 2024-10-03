@@ -60,6 +60,10 @@ def task_detail(request, task_id):
         )
         return JsonResponse({'form': form, 'url': task.get_absolute_url()})
     else:
+        if request.method == 'POST':
+            task_detail_form = TaskForm(instance=task, data=request.POST)
+            if task_detail_form.is_valid():
+                task_detail_form.save()
         return render(request,
                       'tasks/home.html',
                       {

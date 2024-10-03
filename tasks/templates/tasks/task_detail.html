@@ -1,9 +1,11 @@
-<form id="task-detail">
+<form id="task-detail" method="POST" action="{% url 'task_detail' task_detail.form.instance.id %}">
+    {% csrf_token %}
     {{ task_detail.form.title }}
     {{ task_detail.form.description }}
     {{ task_detail.form.performers }}
     {{ task_detail.form.deadline }}
     <div id="id_created_at">{{ task_detail.created_at }}</div>
+    <input type="submit" class="submit-btn" value="Save">
 </form>
 <div id="subtasks">
     <h1>Subtasks</h1>
@@ -23,5 +25,5 @@
         <label for="id_deadline">{{ subtask_form.deadline.label }}:</label>
         {{ subtask_form.deadline }}
     </div>
-    <input type="submit" value="Add">
+    <input type="submit" class="submit-btn" value="Add subtask">
 </form>

@@ -26,6 +26,7 @@ class HomePageTest(UnitTest):
         self.assertContains(response, 'placeholder="Description"')
         self.assertContains(response, 'placeholder="Performers"')
         self.assertContains(response, 'placeholder="e.g. 2025-01-25 14:30"')
+        self.assertContains(response, 'class="submit-btn"')
 
     def test_passes_only_tasks_with_null_parent(self):
         task = self.create_task()
@@ -250,9 +251,9 @@ class TaskDetailTest(UnitTest):
         task = self.create_task()
         task.save()
 
-        response = self.ajax_get(task.id)
+        ajax_response = self.ajax_get(task.id)
 
-        form = json.loads(response.content)['form']
+        form = json.loads(ajax_response.content)['form']
         self.assertIn('id="task-detail"', form)
         add_task_form = re.findall('<form id="task-detail".*?</form>',
                                    form.replace('\t', ' ').replace('\n', ' '))[0]
@@ -261,14 +262,26 @@ class TaskDetailTest(UnitTest):
         self.assertIn('id="id_performers"', add_task_form)
         self.assertIn('id="id_deadline"', add_task_form)
         self.assertIn('id="id_created_at"', add_task_form)
+        self.assertIn('class="submit-btn"', add_task_form)
+
+        response = self.client.get(f'/tasks/{task.id}/').content.decode('utf8')
+        self.assertIn('id="task-detail"', response)
+        add_task_form = re.findall('<form id="task-detail".*?</form>',
+                                   response.replace('\t', ' ').replace('\n', ' '))[0]
+        self.assertIn('id="id_title"', add_task_form)
+        self.assertIn('id="id_description"', add_task_form)
+        self.assertIn('id="id_performers"', add_task_form)
+        self.assertIn('id="id_deadline"', add_task_form)
+        self.assertIn('id="id_created_at"', add_task_form)
+        self.assertIn('class="submit-btn"', add_task_form)
 
     def test_shows_add_subtask_form_on_page(self):
         task = self.create_task()
         task.save()
 
-        response = self.ajax_get(task.id)
+        ajax_response = self.ajax_get(task.id)
 
-        form = json.loads(response.content)['form']
+        form = json.loads(ajax_response.content)['form']
         self.assertIn('id="add-subtask"', form)
         add_subtask_form = re.findall('<form id="add-subtask".*?</form>',
                                    form.replace('\t', ' ').replace('\n', ' '))[0]
@@ -276,6 +289,17 @@ class TaskDetailTest(UnitTest):
         self.assertIn('id="id_description"', add_subtask_form)
         self.assertIn('id="id_performers"', add_subtask_form)
         self.assertIn('id="id_deadline"', add_subtask_form)
+        self.assertIn('class="submit-btn"', add_subtask_form)
+
+        response = self.client.get(f'/tasks/{task.id}/').content.decode('utf8')
+        self.assertIn('id="add-subtask"', response)
+        add_subtask_form = re.findall('<form id="add-subtask".*?</form>',
+                                   response.replace('\t', ' ').replace('\n', ' '))[0]
+        self.assertIn('id="id_title"', add_subtask_form)
+        self.assertIn('id="id_description"', add_subtask_form)
+        self.assertIn('id="id_performers"', add_subtask_form)
+        self.assertIn('id="id_deadline"', add_subtask_form)
+        self.assertIn('class="submit-btn"', add_subtask_form)
 
     def test_for_not_existing_task_id_returns_http404(self):
         ajax_response = self.client.get('/tasks/532/', headers={'X-Requested-With': 'XMLHttpRequest'})
@@ -296,3 +320,25 @@ class TaskDetailTest(UnitTest):
 
         self.assertIn(task, response.context['tasks'])
         self.assertNotIn(subtask, response.context['tasks'])
+
+    def test_can_save_a_POST_request(self):
+        task = self.create_task()
+        task.save()
+
+        new_data = {
+            'title': 'New title',
+            'description': 'New Description',
+            'performers': 'New performers',
+            'deadline': '2021-09-13 15:00'
+        }
+        self.client.post(f'/tasks/{task.id}/', data=new_data)
+        self.assertEqual(Task.objects.count(), 1)
+
+        self.assertEqual(task, Task.objects.first())
+        self.assertEqual(task.title, new_data['title'])
+        self.assertEqual(task.description, new_data['description'])
+        self.assertEqual(task.performers, new_data['performers'])
+        self.assertEqual(
+            task.deadline.strftime(UnitTest.DATETIME_FORMAT),
+            new_data['deadline']
+        )

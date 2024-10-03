@@ -1,9 +1,10 @@
 import time
+import datetime
+
 from django.contrib.staticfiles.testing import StaticLiveServerTestCase
 from selenium import webdriver
 from selenium.webdriver.common.by import By
-from selenium.webdriver.common.keys import Keys
-from selenium.common.exceptions import WebDriverException, NoSuchElementException
+from selenium.common.exceptions import WebDriverException
 
 MAX_WAIT = 10
 
@@ -14,7 +15,7 @@ class FunctionalTest(StaticLiveServerTestCase):
     def tearDown(self):
         self.browser.quit()
 
-    def add_task(self, form, title, description, performers, deadline):
+    def add_task(self, form, title, description, performers, deadline, submit=True):
         title_inputbox = form.find_element(By.ID, 'id_title')
         title_inputbox.send_keys(title)
 
@@ -27,7 +28,9 @@ class FunctionalTest(StaticLiveServerTestCase):
         deadline_inputbox = form.find_element(By.ID, 'id_deadline')
         deadline_inputbox.send_keys(deadline)
 
-        title_inputbox.send_keys(Keys.ENTER)
+        if submit:
+            submit_btn = form.find_element(By.CLASS_NAME, 'submit-btn')
+            submit_btn.click()
 
     def wait_for_item_in_tasks_list(self, item_text):
         start_time = time.time()
@@ -61,3 +64,29 @@ class FunctionalTest(StaticLiveServerTestCase):
             lambda: self.browser.find_element(By.ID, 'add-task')
         )
         return add_task_form.find_element(By.ID, element_id)
+
+    def assert_task_details_equals_to(self, title, description, performers, deadline, created_at):
+        task_detail_form = self.wait_for(
+            lambda: self.browser.find_element(By.ID, 'task-detail')
+        )
+        actual_title = task_detail_form.find_element(By.ID, 'id_title')
+        self.assertEqual(title, actual_title.get_attribute('value'))
+
+        actual_description = task_detail_form.find_element(By.ID, 'id_description')
+        self.assertEqual(
+            description,
+            actual_description.get_attribute('value')
+        )
+
+        actual_performers = task_detail_form.find_element(By.ID, 'id_performers')
+        self.assertEqual(performers, actual_performers.get_attribute('value'))
+
+        actual_deadline = task_detail_form.find_element(By.ID, 'id_deadline')
+        self.assertEqual(deadline, actual_deadline.get_attribute('value'))
+
+        actual_created_at_value = task_detail_form.find_element(By.ID, 'id_created_at').text
+        self.assertAlmostEqual(
+            datetime.datetime.strptime(actual_created_at_value, '%Y-%m-%d %H:%M'),
+            created_at,
+            delta=datetime.timedelta(minutes=1)
+        )
