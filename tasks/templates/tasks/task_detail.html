@@ -8,6 +8,10 @@
     <div id="id_created_at">{{ task_detail.created_at }}</div>
     <input type="submit" class="submit-btn" value="Save">
 </form>
+<form id="delete-task" method="POST" action="{% url 'delete_task' task_detail.form.instance.id %}">
+    {% csrf_token %}
+    <input name="delete" type="submit" id="delete-task-btn" value="Delete task">
+</form>
 <div id="subtasks">
     <h1>Subtasks</h1>
     <ul id="subtasks-list">

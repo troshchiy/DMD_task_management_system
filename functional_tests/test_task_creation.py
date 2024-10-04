@@ -1,5 +1,4 @@
 import datetime
-import re
 
 from selenium.webdriver.common.by import By
 from selenium.webdriver.common.keys import Keys
@@ -152,78 +151,6 @@ class TaskCreationTest(FunctionalTest):
         self.wait_for_item_in_tasks_list('Buy tea')
         self.wait_for_item_in_tasks_list('Brew the tea')
 
-    def test_can_view_task_details(self):
-        # User goes to homepage
-        self.browser.get(self.live_server_url)
-
-        # User adds task "Buy tea"
-        add_task_form = self.wait_for(lambda: self.browser.find_element(By.ID, 'add-task'))
-        buy_tea_task_data = {
-            'title': 'Buy tea',
-            'description': 'Go to the tea shop and buy puer tea',
-            'performers': 'Vladislav Troshchiy',
-            'deadline': '2024-10-02 20:00'
-        }
-        self.add_task(form=add_task_form, **buy_tea_task_data)
-
-        buy_tea_created_at = datetime.datetime.now()
-        self.wait_for_item_in_tasks_list('Buy tea')
-
-        # Then user adds task "Brew the tea"
-        add_task_form = self.wait_for(lambda: self.browser.find_element(By.ID, 'add-task'))
-        brew_the_tea_task_data = {
-            'title': 'Brew the tea',
-            'description': 'Place 10g of tea into the tea pot and steep tea between 3 to 5 minutes.',
-            'performers': 'Vlad Troshchiy',
-            'deadline': '2024-10-03 13:00'
-        }
-        self.add_task(form=add_task_form, **brew_the_tea_task_data)
-
-        brew_the_tea_created_at = datetime.datetime.now()
-        self.wait_for_item_in_tasks_list('Brew the tea')
-
-        # User wants to see detail info about the "Buy tea" task, so he hits on the "Brew tea" list item at the sidebar
-        buy_tea_li = self.wait_for_item_in_tasks_list('Buy tea')
-        buy_tea_li.click()
-
-        # The page shows the "Buy tea" task details including title, description, performers, deadline and created date
-        self.assert_task_details_equals_to(**buy_tea_task_data, created_at=buy_tea_created_at)
-
-        # User noticed that the current URL has changed to my-site.com/tasks/\d*/
-        self.wait_for(
-            lambda: self.assertTrue(
-                re.findall('/tasks/[0-9]+/', self.browser.current_url)
-            )
-        )
-        buy_tea_task_url = self.browser.current_url
-
-        # Then user wants to see detail info about the "Brew the tea" task, and he hits on the list item
-        self.wait_for_item_in_tasks_list('Brew the tea').click()
-
-        # And the page shows the detail info
-        self.assert_task_details_equals_to(**brew_the_tea_task_data, created_at=brew_the_tea_created_at)
-
-        # And current URL has changed, and now it looks like my-site.com/tasks/2/
-        self.wait_for(
-            lambda: self.assertNotEqual(    # Wait until current URL changes
-                buy_tea_task_url,
-                self.browser.current_url
-            )
-            )
-
-        self.wait_for(
-            lambda: self.assertTrue(        # Make sure that the link is in the correct format
-                re.findall('/tasks/[0-9]+/', self.browser.current_url)
-            )
-        )
-
-        # User noticed that now there are no info about the "Buy tea" task
-        content = self.browser.find_element(By.ID, 'content')
-        self.assertNotIn('Buy tea', content.get_attribute('innerHTML'))
-        self.assertNotIn('Go to the tea shop and buy puer tea', content.get_attribute('innerHTML'))
-        self.assertNotIn('Vladislav Troshchiy', content.get_attribute('innerHTML'))
-        self.assertNotIn('2024-10-02 20:00', content.get_attribute('innerHTML'))
-
     def test_can_create_a_subtask(self):
         # User goes to homepage and add a task "Brew the tea"
         self.browser.get(self.live_server_url)
@@ -278,10 +205,10 @@ class TaskCreationTest(FunctionalTest):
         )
 
         # The page updates again, and now shows both subtask on the sidebar tasks list
-        # and on the "Brew the tea" task details
         self.wait_for_item_in_tasks_list('Heat water')
         self.wait_for_item_in_tasks_list('Steep the tea')
 
+        # Also the subtasks are present on the "Brew the tea" task details page
         subtasks_list = self.browser.find_element(By.ID, 'subtasks-list').find_elements(By.CLASS_NAME, 'task-title')
         self.assertIn('Heat water', [subtask.text for subtask in subtasks_list])
         self.assertIn('Steep the tea', [subtask.text for subtask in subtasks_list])

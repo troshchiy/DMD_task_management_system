@@ -436,3 +436,75 @@ class TaskDetailTest(UnitTest):
 
         self.assertIn(task, response.context['tasks'])
         self.assertNotIn(subtask, response.context['tasks'])
+
+
+class DeleteTaskTest(UnitTest):
+    def test_can_delete_task_via_POST_request(self):
+        task = self.create_task()
+        task.save()
+        self.assertEqual(Task.objects.count(), 1)
+
+        self.client.post(f'/tasks/{task.id}/delete', data={'delete': ''})
+
+        self.assertEqual(Task.objects.count(), 0)
+
+    def test_redirects_after_POST(self):
+        task = self.create_task()
+        task.save()
+
+        response = self.client.post(f'/tasks/{task.id}/delete', data={'delete': ''})
+
+        self.assertRedirects(response, '/')
+
+    def test_for_invalid_POST_does_not_delete_task(self):
+        task = self.create_task()
+        task.save()
+        self.assertEqual(Task.objects.count(), 1)
+
+        self.client.post(f'/tasks/{task.id}/delete', data={})
+
+        self.assertEqual(Task.objects.count(), 1)
+
+    def post_invalid_data(self):
+        task = self.create_task()
+        task.save()
+        return self.client.post(f'/tasks/{task.id}/delete', data={})
+
+    def test_for_invalid_POST_renders_home_template(self):
+        response = self.post_invalid_data()
+
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'tasks/home.html')
+
+    def test_for_invalid_POST_passes_task_form_to_template(self):
+        response = self.post_invalid_data()
+        self.assertIsInstance(response.context['task_form'], TaskForm)
+
+    def test_for_invalid_POST_passes_task_detail_to_template(self):
+        task = self.create_task()
+        task.save()
+        response = self.post_invalid_data()
+        self.assertIsInstance(response.context['task_detail']['form'], TaskForm)
+        self.assertEqual(
+            response.context['task_detail']['created_at'],
+            task.created_at.strftime(UnitTest.DATETIME_FORMAT)
+        )
+
+    def test_for_invalid_POST_passes_subtask_form_to_template(self):
+        response = self.post_invalid_data()
+        self.assertIsInstance(response.context['subtask_form'], TaskForm)
+
+    def test_for_invalid_POST_shows_errors_on_page(self):
+        response = self.post_invalid_data()
+        self.assertContains(response, 'Error deleting the task')
+
+    def test_for_invalid_POST_passes_to_template_only_tasks_with_null_parent(self):
+        task = self.create_task()
+        task.save()
+        subtask = self.create_task(parent=task)
+        subtask.save()
+
+        response = self.client.post(f'/tasks/{task.id}/delete', data={})
+
+        self.assertIn(task, response.context['tasks'])
+        self.assertNotIn(subtask, response.context['tasks'])

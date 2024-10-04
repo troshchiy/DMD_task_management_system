@@ -1,6 +1,7 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.http import JsonResponse
 from django.template.loader import render_to_string
+from django.contrib import messages
 
 from .models import Task
 from .forms import TaskForm
@@ -78,3 +79,24 @@ def task_detail(request, task_id):
                           'subtask_form': TaskForm(),
                           'tasks': Task.objects.filter(parent__isnull=True)
                       })
+
+
+def delete_task(request, task_id):
+    task = get_object_or_404(Task, id=task_id)
+    if 'delete' in request.POST:
+        task.delete()
+        return redirect('/')
+    else:
+        messages.error(request, 'Error deleting the task')
+
+    return render(request,
+                  'tasks/home.html',
+                  {
+                      'task_form': TaskForm(),
+                      'task_detail': {
+                          'form': TaskForm(instance=task),
+                          'created_at': task.created_at.strftime('%Y-%m-%d %H:%M')
+                      },
+                      'subtask_form': TaskForm(),
+                      'tasks': Task.objects.filter(parent__isnull=True)
+                  })
