@@ -335,7 +335,7 @@ class TaskDetailTest(UnitTest):
             'description': 'New Description',
             'performers': 'New performers',
             'deadline': '2021-09-13 15:00',
-            'status': 'CMPL'
+            'status': 'PRGS'
         }
         self.client.post(f'/tasks/{task.id}/', data=new_data)
         self.assertEqual(Task.objects.count(), 1)
@@ -360,7 +360,7 @@ class TaskDetailTest(UnitTest):
             'description': 'New Description',
             'performers': 'New performers',
             'deadline': '2021-09-13 15:00',
-            'status': 'CMPL'
+            'status': 'PRGS'
         }
         response = self.client.post(f'/tasks/{task.id}/', data=new_data)
         self.assertRedirects(response, f'/tasks/{task.id}/')

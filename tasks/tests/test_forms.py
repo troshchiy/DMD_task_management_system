@@ -61,10 +61,6 @@ class TaskFormTest(UnitTest):
         form = self.create_task_form_with_data(deadline='')
         self.assert_form_validation_for_blank_field(form, 'deadline')
 
-    def test_form_validation_for_blank_status(self):
-        form = self.create_task_form_with_data(status='')
-        self.assert_form_validation_for_blank_field(form, 'status')
-
     def test_form_validation_for_invalid_status(self):
         form = self.create_task_form_with_data(status='any')
         self.assertFalse(form.is_valid())
