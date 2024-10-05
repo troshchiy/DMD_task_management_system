@@ -100,7 +100,7 @@ class NewSubtaskTest(UnitTest):
             'description': 'Subtask Description 1',
             'performers': 'Subtask Performer 1',
             'deadline': '2020-12-25 10:00',
-            'status': 'ASGD'
+            'status': 'AS'
         }
         self.client.post(f'/tasks/{task.id}/subtasks/new', data=subtask_data)
         self.assertEqual(Task.objects.count(), 2)
@@ -123,7 +123,7 @@ class NewSubtaskTest(UnitTest):
             'description': 'Subtask Description 1',
             'performers': 'Subtask Performer 1',
             'deadline': '2020-12-25 10:00',
-            'status': 'ASGD'
+            'status': 'AS'
         }
         response = self.client.post(f'/tasks/{task.id}/subtasks/new', data=subtask_data)
         self.assertRedirects(response, f'/tasks/{task.id}/')
@@ -335,7 +335,7 @@ class TaskDetailTest(UnitTest):
             'description': 'New Description',
             'performers': 'New performers',
             'deadline': '2021-09-13 15:00',
-            'status': 'PRGS'
+            'status': 'PR'
         }
         self.client.post(f'/tasks/{task.id}/', data=new_data)
         self.assertEqual(Task.objects.count(), 1)
@@ -360,7 +360,7 @@ class TaskDetailTest(UnitTest):
             'description': 'New Description',
             'performers': 'New performers',
             'deadline': '2021-09-13 15:00',
-            'status': 'PRGS'
+            'status': 'PR'
         }
         response = self.client.post(f'/tasks/{task.id}/', data=new_data)
         self.assertRedirects(response, f'/tasks/{task.id}/')

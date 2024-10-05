@@ -5,10 +5,10 @@ from django.urls import reverse
 
 class Task(models.Model):
     class Status(models.TextChoices):
-        ASSIGNED = 'ASGD', 'Assigned'
-        IN_PROGRESS = 'PRGS', 'In progress'
-        SUSPENDED = 'SPND', 'Suspended'
-        COMPLETED = 'CMPL', 'Completed'
+        ASSIGNED = 'AS', 'Assigned'
+        IN_PROGRESS = 'PR', 'In progress'
+        SUSPENDED = 'SP', 'Suspended'
+        COMPLETED = 'CM', 'Completed'
 
     parent = models.ForeignKey('self', null=True, blank=True, default=None, on_delete=models.SET_NULL)
     title = models.TextField()
@@ -16,7 +16,7 @@ class Task(models.Model):
     performers = models.TextField()
     deadline = models.DateTimeField()
     created_at = models.DateTimeField(auto_now_add=True)
-    status = models.CharField(max_length=4,
+    status = models.CharField(max_length=2,
                               choices=Status.choices,
                               default=Status.ASSIGNED,
                               blank=True)

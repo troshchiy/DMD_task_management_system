@@ -9,7 +9,7 @@ class UnitTest(TestCase):
         'description': 'Go to tea shop and buy puer tea',
         'performers': 'Vladislav Troshchiy',
         'deadline': '2024-10-02 20:00',
-        'status': 'ASGD'
+        'status': 'AS'
     }
     DATETIME_FORMAT = '%Y-%m-%d %H:%M'
 

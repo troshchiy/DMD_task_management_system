@@ -2,7 +2,6 @@ import datetime
 
 from django.core.exceptions import ValidationError
 from django.utils import timezone
-from django.db.utils import IntegrityError
 
 from tasks.models import Task
 from .base import UnitTest
@@ -114,19 +113,19 @@ class TaskModelTest(UnitTest):
         task.save()
 
         added_task = Task.objects.first()
-        self.assertEqual(added_task.status, 'ASGD')
+        self.assertEqual(added_task.status, 'AS')
 
     def test_sets_status_ASSIGNED_when_its_blank(self):
         task = self.create_task(status='')
         task.save()
 
         added_task = Task.objects.first()
-        self.assertEqual(added_task.status, 'ASGD')
+        self.assertEqual(added_task.status, 'AS')
 
     def test_acceptable_status_values(self):
         task = self.create_task()
 
-        for status in ('ASGD', 'PRGS', 'SPND', 'PRGS', 'CMPL'):
+        for status in ('AS', 'PR', 'SP', 'PR', 'CM'):
             task.status = status
             task.save()             # Should not raise ValidationError
             self.assertEqual(Task.objects.first().status, status)
@@ -156,7 +155,7 @@ class TaskModelTest(UnitTest):
         task = self.create_task()
         task.save()
 
-        task.status = 'CMPL'
+        task.status = 'CM'
         with self.assertRaises(ValidationError) as context:
             task.save()
 
@@ -170,7 +169,7 @@ class TaskModelTest(UnitTest):
         task = self.create_task()
         task.save()
 
-        task.status = 'SPND'
+        task.status = 'SP'
         with self.assertRaises(ValidationError) as context:
             task.save()
 
@@ -183,7 +182,7 @@ class TaskModelTest(UnitTest):
     def test_can_set_status_only_ASSIGNED_when_creating(self):
         task = self.create_task()
 
-        for status in ('PRGS', 'SPND', 'PRGS', 'CMPL'):
+        for status in ('PR', 'SP', 'PR', 'CM'):
             task.status = status
 
             with self.assertRaises(ValidationError) as context:
