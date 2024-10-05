@@ -5,6 +5,7 @@
     {{ task_detail.form.description }}
     {{ task_detail.form.performers }}
     {{ task_detail.form.deadline }}
+    {{ task_detail.form.status }}
     <div id="id_created_at">{{ task_detail.created_at }}</div>
     <input type="submit" class="submit-btn" value="Save">
 </form>
@@ -26,6 +27,7 @@
     {{ subtask_form.title }}
     {{ subtask_form.description }}
     {{ subtask_form.performers }}
+    {{ subtask_form.status }}
     <div id="deadline">
         <label for="id_deadline">{{ subtask_form.deadline.label }}:</label>
         {{ subtask_form.deadline }}

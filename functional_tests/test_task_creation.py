@@ -187,7 +187,13 @@ class TaskCreationTest(FunctionalTest):
         self.wait_for_item_in_tasks_list('Heat water')
 
         # User notices that the page still shows the "Brew the tea" task detail page
-        self.assert_task_details_equals_to(**brew_the_tea_task_data, created_at=brew_the_tea_created_at)
+        self.wait_for(
+            lambda: self.assert_task_details_equals_to(
+                **brew_the_tea_task_data,
+                created_at=brew_the_tea_created_at,
+                status_label='Assigned'
+            )
+        )
 
         # And now the page contains "Heat water" as an item of subtasks list
         subtasks_list = self.browser.find_element(By.ID, 'subtasks-list').find_elements(By.CLASS_NAME, 'task-title')

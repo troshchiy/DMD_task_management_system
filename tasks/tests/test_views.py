@@ -39,6 +39,7 @@ class HomePageTest(UnitTest):
         self.assertIn(task, response.context['tasks'])
         self.assertNotIn(subtask, response.context['tasks'])
 
+
 class NewTaskTest(UnitTest):
     def test_can_save_a_POST_request(self):
         self.client.post('/tasks/new', data=UnitTest.VALID_TASK_DATA)
@@ -98,7 +99,8 @@ class NewSubtaskTest(UnitTest):
             'title': 'Subtask 1',
             'description': 'Subtask Description 1',
             'performers': 'Subtask Performer 1',
-            'deadline': '2020-12-25 10:00'
+            'deadline': '2020-12-25 10:00',
+            'status': 'ASGD'
         }
         self.client.post(f'/tasks/{task.id}/subtasks/new', data=subtask_data)
         self.assertEqual(Task.objects.count(), 2)
@@ -120,7 +122,8 @@ class NewSubtaskTest(UnitTest):
             'title': 'Subtask 1',
             'description': 'Subtask Description 1',
             'performers': 'Subtask Performer 1',
-            'deadline': '2020-12-25 10:00'
+            'deadline': '2020-12-25 10:00',
+            'status': 'ASGD'
         }
         response = self.client.post(f'/tasks/{task.id}/subtasks/new', data=subtask_data)
         self.assertRedirects(response, f'/tasks/{task.id}/')
@@ -262,6 +265,7 @@ class TaskDetailTest(UnitTest):
         self.assertIn('id="id_performers"', task_detail_form)
         self.assertIn('id="id_deadline"', task_detail_form)
         self.assertIn('id="id_created_at"', task_detail_form)
+        self.assertIn('id="id_status"', task_detail_form)
         self.assertIn('class="submit-btn"', task_detail_form)
 
         response = self.client.get(f'/tasks/{task.id}/').content.decode('utf8')
@@ -273,6 +277,7 @@ class TaskDetailTest(UnitTest):
         self.assertIn('id="id_performers"', task_detail_form)
         self.assertIn('id="id_deadline"', task_detail_form)
         self.assertIn('id="id_created_at"', task_detail_form)
+        self.assertIn('id="id_status"', task_detail_form)
         self.assertIn('class="submit-btn"', task_detail_form)
 
     def test_shows_add_subtask_form_on_page(self):
@@ -329,7 +334,8 @@ class TaskDetailTest(UnitTest):
             'title': 'New title',
             'description': 'New Description',
             'performers': 'New performers',
-            'deadline': '2021-09-13 15:00'
+            'deadline': '2021-09-13 15:00',
+            'status': 'CMPL'
         }
         self.client.post(f'/tasks/{task.id}/', data=new_data)
         self.assertEqual(Task.objects.count(), 1)
@@ -353,7 +359,8 @@ class TaskDetailTest(UnitTest):
             'title': 'New title',
             'description': 'New Description',
             'performers': 'New performers',
-            'deadline': '2021-09-13 15:00'
+            'deadline': '2021-09-13 15:00',
+            'status': 'CMPL'
         }
         response = self.client.post(f'/tasks/{task.id}/', data=new_data)
         self.assertRedirects(response, f'/tasks/{task.id}/')

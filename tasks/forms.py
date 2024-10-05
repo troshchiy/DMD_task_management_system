@@ -13,7 +13,7 @@ class EmptyFieldErrorMessage:
 class TaskForm(forms.ModelForm):
     class Meta:
         model = Task
-        fields = ('title', 'description', 'performers', 'deadline')
+        fields = ('title', 'description', 'performers', 'deadline', 'status')
         widgets = {
             'title': forms.fields.TextInput(attrs={
                 'placeholder': 'Title',
@@ -26,11 +26,13 @@ class TaskForm(forms.ModelForm):
             }),
             'deadline': forms.fields.DateTimeInput(attrs={
                 'placeholder': 'e.g. 2025-01-25 14:30',
-            }, format='%Y-%m-%d %H:%M')
+            }, format='%Y-%m-%d %H:%M'),
+            'status': forms.fields.Select(choices=Task.Status.choices)
         }
         error_messages ={
             'title': {'required': str(EmptyFieldErrorMessage('title'))},
             'description': {'required': str(EmptyFieldErrorMessage('description'))},
             'performers': {'required': str(EmptyFieldErrorMessage('performers'))},
             'deadline': {'required': str(EmptyFieldErrorMessage('deadline'))},
+            'status': {'required': str(EmptyFieldErrorMessage('status'))},
         }

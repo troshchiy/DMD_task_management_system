@@ -41,10 +41,15 @@ class TaskEditingTest(FunctionalTest):
         buy_tea_li = self.wait_for_item_in_tasks_list('Buy tea')
         buy_tea_li.click()
 
-        # The page shows the "Buy tea" task details including title, description, performers, deadline and created date
-        self.assert_task_details_equals_to(**buy_tea_task_data, created_at=buy_tea_created_at)
+        # The page shows the "Buy tea" task details including title, description, performers, status, deadline and created date
+        self.wait_for(
+            lambda: self.assert_task_details_equals_to(
+                **buy_tea_task_data,
+                created_at=buy_tea_created_at,
+                status_label='Assigned')
+        )
 
-        # User noticed that the current URL has changed to my-site.com/tasks/\d*/
+        # User noticed that the current URL has changed to my-site.com/tasks/[0-9]*/
         self.wait_for(
             lambda: self.assertTrue(
                 re.findall('/tasks/[0-9]+/', self.browser.current_url)
@@ -56,7 +61,13 @@ class TaskEditingTest(FunctionalTest):
         self.wait_for_item_in_tasks_list('Brew the tea').click()
 
         # And the page shows the detail info
-        self.assert_task_details_equals_to(**brew_the_tea_task_data, created_at=brew_the_tea_created_at)
+        self.wait_for(
+            lambda: self.assert_task_details_equals_to(
+                **brew_the_tea_task_data,
+                created_at=brew_the_tea_created_at,
+                status_label='Assigned'
+            )
+        )
 
         # And current URL has changed, and now it looks like my-site.com/tasks/2/
         self.wait_for(
@@ -102,7 +113,8 @@ class TaskEditingTest(FunctionalTest):
             'title': 'New title',
             'description': 'New description',
             'performers': 'New performers',
-            'deadline': '2025-01-29 08:00'
+            'deadline': '2025-01-29 08:00',
+            'status_label': 'In Progress'
         }
 
         title_inputbox = task_detail.find_element(By.ID, 'id_title')
@@ -121,6 +133,12 @@ class TaskEditingTest(FunctionalTest):
         deadline_inputbox.clear()
         deadline_inputbox.send_keys(edit_data['deadline'])
 
+        status_selector = task_detail.find_element(By.ID, 'id_status')
+        status_options = status_selector.find_elements(By.TAG_NAME, 'option')
+        for option in status_options:
+            if option.text == edit_data['status_label']:
+                option.click()
+
         # Then User submit changes via "Save" button
         save_btn = task_detail.find_element(By.CLASS_NAME, 'submit-btn')
         self.assertEqual(save_btn.get_attribute('value'), 'Save')
@@ -133,7 +151,8 @@ class TaskEditingTest(FunctionalTest):
                 description=edit_data['description'],
                 performers=edit_data['performers'],
                 deadline=edit_data['deadline'],
-                created_at=datetime.strptime(old_task_created_at, '%Y-%m-%d %H:%M')
+                created_at=datetime.strptime(old_task_created_at, '%Y-%m-%d %H:%M'),
+                status_label=edit_data['status_label']
             )
         )
 

@@ -34,6 +34,10 @@ class TaskFormTest(UnitTest):
         form = TaskForm()
         self.assertIn('placeholder="e.g. 2025-01-25 14:30"', form.as_p())
 
+    def test_form_renders_status_field(self):
+        form = TaskForm()
+        self.assertIn('id="id_status"', form.as_p())
+
     def assert_form_validation_for_blank_field(self, form_instance, field_name):
         self.assertFalse(form_instance.is_valid())
         self.assertEqual(
@@ -57,3 +61,11 @@ class TaskFormTest(UnitTest):
         form = self.create_task_form_with_data(deadline='')
         self.assert_form_validation_for_blank_field(form, 'deadline')
 
+    def test_form_validation_for_blank_status(self):
+        form = self.create_task_form_with_data(status='')
+        self.assert_form_validation_for_blank_field(form, 'status')
+
+    def test_form_validation_for_invalid_status(self):
+        form = self.create_task_form_with_data(status='any')
+        self.assertFalse(form.is_valid())
+        self.assertIn('status', form.errors)

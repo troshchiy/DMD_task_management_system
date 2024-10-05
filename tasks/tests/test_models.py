@@ -2,6 +2,7 @@ import datetime
 
 from django.core.exceptions import ValidationError
 from django.utils import timezone
+from django.db.utils import IntegrityError
 
 from tasks.models import Task
 from .base import UnitTest
@@ -60,6 +61,13 @@ class TaskModelTest(UnitTest):
         self.assert_cannot_save_task_with_blank_field(blank_description_task, 'description')
         self.assert_cannot_save_task_with_null_field(null_description_task, 'description')
 
+    def test_cannot_save_tasks_with_blank_or_null_status(self):
+        blank_status_task = self.create_task(status='')
+        null_status_task = self.create_task(status=None)
+
+        self.assert_cannot_save_task_with_blank_field(blank_status_task, 'status')
+        self.assert_cannot_save_task_with_null_field(null_status_task, 'status')
+
     def test_cannot_save_tasks_with_null_deadline(self):
         null_deadline_task = self.create_task(deadline=None)
 
@@ -78,7 +86,11 @@ class TaskModelTest(UnitTest):
             performers=UnitTest.VALID_TASK_DATA['performers'],
             deadline=UnitTest.VALID_TASK_DATA['deadline']
         )
-        self.assertIsNone(task.parent)
+        task.full_clean()
+        task.save()
+
+        added_task = Task.objects.first()
+        self.assertIsNone(added_task.parent)
 
     def test_task_is_related_to_another_task(self):
         task = self.create_task()
@@ -103,6 +115,49 @@ class TaskModelTest(UnitTest):
 
         task = Task.objects.first()
         self.assertAlmostEqual(task.created_at, timezone.now(), delta=datetime.timedelta(seconds=1))
+
+    def test_default_status(self):
+        task = Task(
+            title=UnitTest.VALID_TASK_DATA['title'],
+            description=UnitTest.VALID_TASK_DATA['description'],
+            performers=UnitTest.VALID_TASK_DATA['performers'],
+            deadline=UnitTest.VALID_TASK_DATA['deadline']
+        )
+        task.full_clean()
+        task.save()
+
+        added_task = Task.objects.first()
+        self.assertEqual(added_task.status, 'ASGD')
+
+    def test_acceptable_status_values(self):
+        task = self.create_task()
+
+        task.status = 'ASGD'    # Assigned
+        task.full_clean()       # Should not raise ValidationError
+
+        task.status = 'PRGS'    # In progress
+        task.full_clean()       # Should not raise ValidationError
+
+        task.status = 'SPND'    # Suspended
+        task.full_clean()       # Should not raise ValidationError
+
+        task.status = 'CMPL'    # Completed
+        task.full_clean()       # Should not raise ValidationError
+
+    def test_cannot_save_task_with_invalid_status(self):
+        task = self.create_task()
+
+        invalid_status = 'NVLD'
+        task.status = invalid_status
+
+        with self.assertRaises(ValidationError) as context:
+            task.full_clean()
+
+        self.assertIn('status', context.exception.error_dict)
+        self.assertEqual(
+            [f"Value '{invalid_status}' is not a valid choice."],
+            context.exception.message_dict['status']
+        )
 
     def test_get_absolute_url(self):
         task = self.create_task()
