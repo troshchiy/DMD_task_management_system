@@ -1,3 +1,4 @@
+from django.core.exceptions import ValidationError
 from django.shortcuts import render, redirect, get_object_or_404
 from django.http import JsonResponse
 from django.template.loader import render_to_string
@@ -64,9 +65,13 @@ def task_detail(request, task_id):
         task_detail_form = TaskForm(instance=task)
         if request.method == 'POST':
             task_detail_form = TaskForm(instance=task, data=request.POST)
+
             if task_detail_form.is_valid():
-                task_detail_form.save()
-                return redirect(task)
+                try:
+                    task_detail_form.save()
+                    return redirect(task)
+                except ValidationError as e:
+                    task_detail_form.add_error(None, e)
 
         return render(request,
                       'tasks/home.html',

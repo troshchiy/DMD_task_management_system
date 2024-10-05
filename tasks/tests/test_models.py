@@ -194,3 +194,39 @@ class TaskModelTest(UnitTest):
                            'Only the status "Assigned" is available".'],
                 context.exception.message_dict['status']
             )
+
+    def test_sets_subtasks_status_to_COMPLETED_when_task_is_completed(self):
+        task = self.create_task(status='PR')
+        task.save(clean=False)
+        subtask_1 = self.create_task(parent=task, status='PR')
+        subtask_1.save(clean=False)
+        subtask_2 = self.create_task(parent=task, status='PR')
+        subtask_2.save(clean=False)
+
+        task.status = 'CM'
+        task.save()
+
+        task = Task.objects.get(id=task.id)
+        subtask_1 = Task.objects.get(id=subtask_1.id)
+        subtask_2 = Task.objects.get(id=subtask_2.id)
+        self.assertEqual(task.status, 'CM')
+        self.assertEqual(subtask_1.status, 'CM')
+        self.assertEqual(subtask_2.status, 'CM')
+
+    def test_doesnt_change_status_if_any_of_subtasks_cannot_be_COMPLETED(self):
+        task = self.create_task(status='PR')
+        task.save(clean=False)
+        subtask_1 = self.create_task(parent=task, status='PR')
+        subtask_1.save(clean=False)
+        subtask_2 = self.create_task(parent=task, status='AS')
+        subtask_2.save(clean=False)
+
+        task.status = 'CM'
+        with self.assertRaises(ValidationError) as context:
+            task.save()
+
+        self.assertEqual(
+            f'The subtask "{subtask_2.title}" cannot be completed. '
+             f'The status "Completed" can only be set after the status "In Progress".',
+            context.exception.message
+        )

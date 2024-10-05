@@ -444,6 +444,83 @@ class TaskDetailTest(UnitTest):
         self.assertIn(task, response.context['tasks'])
         self.assertNotIn(subtask, response.context['tasks'])
 
+    def test_shows_error_on_page_when_task_cannot_be_SUSPENDED(self):
+        task = self.create_task()
+        task.save()
+
+        new_data = UnitTest.VALID_TASK_DATA
+        new_data['status'] = 'SP'
+
+        response = self.client.post(f'/tasks/{task.id}/', data=new_data)
+        self.assertContains(response, escape('The status "Suspended" can only be set after the status "In Progress".'))
+
+    def test_shows_error_on_page_when_task_cannot_be_COMPLETED(self):
+        task = self.create_task()
+        task.save()
+
+        new_data = UnitTest.VALID_TASK_DATA
+        new_data['status'] = 'CM'
+
+        response = self.client.post(f'/tasks/{task.id}/', data=new_data)
+        self.assertContains(response, escape('The status "Completed" can only be set after the status "In Progress".'))
+
+    def test_sets_subtasks_status_to_COMPLETED_when_task_is_completed(self):
+        task = self.create_task(status='PR')
+        task.save(clean=False)
+        subtask_1 = self.create_task(parent=task, status='PR')
+        subtask_1.save(clean=False)
+        subtask_2 = self.create_task(parent=task, status='PR')
+        subtask_2.save(clean=False)
+
+        new_data = UnitTest.VALID_TASK_DATA
+        new_data['status'] = 'CM'
+
+        self.client.post(f'/tasks/{task.id}/', data=new_data)
+
+        task = Task.objects.get(id=task.id)
+        subtask_1 = Task.objects.get(id=subtask_1.id)
+        subtask_2 = Task.objects.get(id=subtask_2.id)
+        self.assertEqual(task.status, 'CM')
+        self.assertEqual(subtask_1.status, 'CM')
+        self.assertEqual(subtask_2.status, 'CM')
+
+    def test_doesnt_change_status_if_any_of_subtasks_cannot_be_COMPLETED(self):
+        task = self.create_task(status='PR')
+        task.save(clean=False)
+        subtask_1 = self.create_task(parent=task, status='PR')
+        subtask_1.save(clean=False)
+        subtask_2 = self.create_task(parent=task, status='AS')
+        subtask_2.save(clean=False)
+
+        new_data = UnitTest.VALID_TASK_DATA
+        new_data['status'] = 'CM'
+
+        self.client.post(f'/tasks/{task.id}/', data=new_data)
+
+        task = Task.objects.get(id=task.id)
+        subtask_1 = Task.objects.get(id=subtask_1.id)
+        subtask_2 = Task.objects.get(id=subtask_2.id)
+        self.assertEqual(task.status, 'PR')
+        self.assertEqual(subtask_1.status, 'PR')
+        self.assertEqual(subtask_2.status, 'AS')
+
+    def test_shows_error_on_page_when_subtask_cannot_be_completed(self):
+        task = self.create_task(status='PR')
+        task.save(clean=False)
+        subtask_1 = self.create_task(parent=task, status='PR')
+        subtask_1.save(clean=False)
+        subtask_2 = self.create_task(parent=task, status='AS')
+        subtask_2.save(clean=False)
+
+        new_data = UnitTest.VALID_TASK_DATA
+        new_data['status'] = 'CM'
+
+        response = self.client.post(f'/tasks/{task.id}/', data=new_data)
+
+        self.assertContains(response,
+                            escape(f'The subtask "{subtask_2.title}" cannot be completed. '
+                                    f'The status "Completed" can only be set after the status "In Progress".'))
+
 
 class DeleteTaskTest(UnitTest):
     def test_can_delete_task_via_POST_request(self):

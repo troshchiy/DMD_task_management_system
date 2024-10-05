@@ -1,5 +1,5 @@
 from django.core.exceptions import ValidationError
-from django.db import models
+from django.db import models, transaction
 from django.urls import reverse
 
 
@@ -43,9 +43,21 @@ class Task(models.Model):
                 {'status': 'The status "Suspended" can only be set after the status "In Progress".'}
             )
 
-    def save(self):
-        self.full_clean()
-        models.Model.save(self)
+    def save(self, clean=True):
+        if clean:
+            self.clean()
+
+            if self.status == Task.Status.COMPLETED:
+                with transaction.atomic():
+                    try:
+                        for subtask in self.task_set.all():
+                            subtask.status = Task.Status.COMPLETED
+                            subtask.save()
+                        return models.Model.save(self)
+                    except ValidationError as e:
+                        raise ValidationError(f'The subtask "{subtask.title}" cannot be completed. {e.messages[0]}')
+
+        return models.Model.save(self)
 
     def get_absolute_url(self):
         return reverse('task_detail', args=[self.id])

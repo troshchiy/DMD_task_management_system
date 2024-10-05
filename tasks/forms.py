@@ -36,3 +36,7 @@ class TaskForm(forms.ModelForm):
             'deadline': {'required': str(EmptyFieldErrorMessage('deadline'))},
             'status': {'required': str(EmptyFieldErrorMessage('status'))},
         }
+
+    def __init__(self, *args, **kwargs):
+        forms.ModelForm.__init__(self, *args, **kwargs)
+        self.fields['status'].widget.choices.blank_choice = []
