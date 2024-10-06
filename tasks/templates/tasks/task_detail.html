@@ -7,6 +7,7 @@
     {{ task_detail.form.deadline }}
     {{ task_detail.form.status }}
     <div id="id_created_at">{{ task_detail.created_at }}</div>
+    <div id="id_planned_labor_intensity">{{ task_detail.form.instance.planned_labor_intensity }}</div>
     <input type="submit" class="submit-btn" value="Save">
 </form>
 <form id="delete-task" method="POST" action="{% url 'delete_task' task_detail.form.instance.id %}">

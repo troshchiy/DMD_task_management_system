@@ -65,7 +65,8 @@ class FunctionalTest(StaticLiveServerTestCase):
         )
         return add_task_form.find_element(By.ID, element_id)
 
-    def assert_task_details_equals_to(self, title, description, performers, deadline, created_at, status_label):
+    def assert_task_details_equals_to(self, title, description, performers, deadline, created_at, status_label,
+                                      planned_labor_intensity):
         task_detail_form = self.browser.find_element(By.ID, 'task-detail')
 
         actual_title = task_detail_form.find_element(By.ID, 'id_title')
@@ -95,3 +96,10 @@ class FunctionalTest(StaticLiveServerTestCase):
         for option in status_options:
             if option.text == status_label:
                 self.assertTrue(option.get_attribute('selected'))
+
+        actual_planned_labor_intensity = task_detail_form.find_element(By.ID, 'id_planned_labor_intensity')
+        self.assertAlmostEqual(
+            datetime.datetime.strptime(actual_planned_labor_intensity.text, '%Y-%m-%d %H:%M'),
+            planned_labor_intensity,
+            delta=datetime.timedelta(minutes=(1))
+        )

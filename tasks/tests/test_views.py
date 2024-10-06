@@ -250,7 +250,7 @@ class TaskDetailTest(UnitTest):
         url = json.loads(response.content)['url']
         self.assertEqual(url, f'/tasks/{task.id}/')
 
-    def test_shows_task_detail_form_on_page(self):
+    def test_for_AJAX_shows_task_detail_form_on_page(self):
         task = self.create_task()
         task.save()
 
@@ -267,8 +267,75 @@ class TaskDetailTest(UnitTest):
         self.assertIn('id="id_created_at"', task_detail_form)
         self.assertIn('id="id_status"', task_detail_form)
         self.assertIn('class="submit-btn"', task_detail_form)
+        self.assertIn('id="id_planned_labor_intensity"', task_detail_form)
+
+    def test_for_AJAX_shows_correct_planned_labor_intensity_value(self):
+        task = self.create_task()
+        task.save()
+
+        ajax_response = self.ajax_get(task.id)
+        form = json.loads(ajax_response.content)['form']
+
+        task = Task.objects.first()
+        expected_planned_labor_intensity = task.deadline - task.created_at
+        actual_planned_labor_intensity = re.findall('<div id="id_planned_labor_intensity".*?>(.*?)</div>', form)[0]
+        self.assertEqual(
+            str(expected_planned_labor_intensity),
+            actual_planned_labor_intensity
+        )
+
+    def test_for_AJAX_shows_correct_planned_labor_intensity_value_when_creating_subtasks(self):
+        task = self.create_task()
+        task.save()
+        subtask_1 = self.create_task(parent=task)
+        subtask_1.save()
+        subtask_2 = self.create_task(parent=task)
+        subtask_2.save()
+
+        ajax_response = self.ajax_get(task.id)
+        form = json.loads(ajax_response.content)['form']
+
+        task = Task.objects.get(id=task.id)
+        subtask_1 = Task.objects.get(id=subtask_1.id)
+        subtask_2 = Task.objects.get(id=subtask_2.id)
+        expected_planned_labor_intensity = ((task.deadline - task.created_at)
+                                            + (subtask_1.deadline - subtask_1.created_at)
+                                            + (subtask_2.deadline - subtask_2.created_at))
+        actual_planned_labor_intensity = re.findall('<div id="id_planned_labor_intensity".*?>(.*?)</div>', form)[0]
+        self.assertEqual(
+            str(expected_planned_labor_intensity),
+            actual_planned_labor_intensity
+        )
+
+    def test_for_AJAX_shows_correct_planned_labor_intensity_value_when_deleting_subtasks(self):
+        task = self.create_task()
+        task.save()
+        subtask_1 = self.create_task(parent=task)
+        subtask_1.save()
+        subtask_2 = self.create_task(parent=task)
+        subtask_2.save()
+
+        subtask_2.delete()
+
+        ajax_response = self.ajax_get(task.id)
+        form = json.loads(ajax_response.content)['form']
+
+        task = Task.objects.get(id=task.id)
+        subtask_1 = Task.objects.get(id=subtask_1.id)
+        expected_planned_labor_intensity = ((task.deadline - task.created_at)
+                                            + (subtask_1.deadline - subtask_1.created_at))
+        actual_planned_labor_intensity = re.findall('<div id="id_planned_labor_intensity".*?>(.*?)</div>', form)[0]
+        self.assertEqual(
+            str(expected_planned_labor_intensity),
+            actual_planned_labor_intensity
+        )
+
+    def test_for_GET_shows_task_detail_form_on_page(self):
+        task = self.create_task()
+        task.save()
 
         response = self.client.get(f'/tasks/{task.id}/').content.decode('utf8')
+
         self.assertIn('id="task-detail"', response)
         task_detail_form = re.findall('<form id="task-detail".*?</form>',
                                    response.replace('\t', ' ').replace('\n', ' '))[0]
@@ -279,6 +346,65 @@ class TaskDetailTest(UnitTest):
         self.assertIn('id="id_created_at"', task_detail_form)
         self.assertIn('id="id_status"', task_detail_form)
         self.assertIn('class="submit-btn"', task_detail_form)
+        self.assertIn('id="id_planned_labor_intensity"', task_detail_form)
+
+    def test_for_GET_shows_correct_planned_labor_intensity_value(self):
+        task = self.create_task()
+        task.save()
+
+        response = self.client.get(f'/tasks/{task.id}/').content.decode('utf8')
+
+        task = Task.objects.first()
+        expected_planned_labor_intensity = task.deadline - task.created_at
+        actual_planned_labor_intensity = re.findall('<div id="id_planned_labor_intensity".*?>(.*?)</div>', response)[0]
+        self.assertEqual(
+            str(expected_planned_labor_intensity),
+            actual_planned_labor_intensity
+        )
+
+    def test_for_GET_shows_correct_planned_labor_intensity_value_when_creating_subtasks(self):
+        task = self.create_task()
+        task.save()
+        subtask_1 = self.create_task(parent=task)
+        subtask_1.save()
+        subtask_2 = self.create_task(parent=task)
+        subtask_2.save()
+
+        response = self.client.get(f'/tasks/{task.id}/').content.decode('utf8')
+
+        task = Task.objects.get(id=task.id)
+        subtask_1 = Task.objects.get(id=subtask_1.id)
+        subtask_2 = Task.objects.get(id=subtask_2.id)
+        expected_planned_labor_intensity = ((task.deadline - task.created_at)
+                                            + (subtask_1.deadline - subtask_1.created_at)
+                                            + (subtask_2.deadline - subtask_2.created_at))
+        actual_planned_labor_intensity = re.findall('<div id="id_planned_labor_intensity".*?>(.*?)</div>', response)[0]
+        self.assertEqual(
+            str(expected_planned_labor_intensity),
+            actual_planned_labor_intensity
+        )
+
+    def test_for_GET_shows_correct_planned_labor_intensity_value_when_deleting_subtasks(self):
+        task = self.create_task()
+        task.save()
+        subtask_1 = self.create_task(parent=task)
+        subtask_1.save()
+        subtask_2 = self.create_task(parent=task)
+        subtask_2.save()
+
+        subtask_2.delete()
+
+        response = self.client.get(f'/tasks/{task.id}/').content.decode('utf8')
+
+        task = Task.objects.get(id=task.id)
+        subtask_1 = Task.objects.get(id=subtask_1.id)
+        expected_planned_labor_intensity = ((task.deadline - task.created_at)
+                                            + (subtask_1.deadline - subtask_1.created_at))
+        actual_planned_labor_intensity = re.findall('<div id="id_planned_labor_intensity".*?>(.*?)</div>', response)[0]
+        self.assertEqual(
+            str(expected_planned_labor_intensity),
+            actual_planned_labor_intensity
+        )
 
     def test_shows_add_subtask_form_on_page(self):
         task = self.create_task()

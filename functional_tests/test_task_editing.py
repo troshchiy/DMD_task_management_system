@@ -1,5 +1,5 @@
 import re
-from datetime import datetime
+from datetime import datetime, timedelta
 
 from selenium.webdriver.common.by import By
 
@@ -22,6 +22,10 @@ class TaskEditingTest(FunctionalTest):
         self.add_task(form=add_task_form, **buy_tea_task_data)
 
         buy_tea_created_at = datetime.now()
+        buy_tea_planned_labor_intensity = datetime.strptime(
+            buy_tea_task_data['deadline'], '%Y-%m-%d %H:%M'
+        ) - buy_tea_created_at
+
         self.wait_for_item_in_tasks_list('Buy tea')
 
         # Then user adds task "Brew the tea"
@@ -35,6 +39,11 @@ class TaskEditingTest(FunctionalTest):
         self.add_task(form=add_task_form, **brew_the_tea_task_data)
 
         brew_the_tea_created_at = datetime.now()
+        brew_the_tea_planned_labor_intensity = datetime.strptime(
+            brew_the_tea_task_data['deadline'], '%Y-%m-%d %H:%M'
+        ) - brew_the_tea_created_at
+
+
         self.wait_for_item_in_tasks_list('Brew the tea')
 
         # User wants to see detail info about the "Buy tea" task, so he hits on the "Brew tea" list item at the sidebar
@@ -46,7 +55,8 @@ class TaskEditingTest(FunctionalTest):
             lambda: self.assert_task_details_equals_to(
                 **buy_tea_task_data,
                 created_at=buy_tea_created_at,
-                status_label='Assigned')
+                status_label='Assigned',
+                planned_labor_intensity=buy_tea_planned_labor_intensity)
         )
 
         # User noticed that the current URL has changed to my-site.com/tasks/[0-9]*/
@@ -65,7 +75,8 @@ class TaskEditingTest(FunctionalTest):
             lambda: self.assert_task_details_equals_to(
                 **brew_the_tea_task_data,
                 created_at=brew_the_tea_created_at,
-                status_label='Assigned'
+                status_label='Assigned',
+                planned_labor_intensity=brew_the_tea_planned_labor_intensity
             )
         )
 
@@ -105,10 +116,11 @@ class TaskEditingTest(FunctionalTest):
         # User choose the added task at the sidebar tasks list to open task details
         self.wait_for_item_in_tasks_list('Old title').click()
 
-        # User decides to change all task details
-        # He edits task title, description, performers and deadline
         task_detail = self.wait_for(lambda: self.browser.find_element(By.ID, 'task-detail'))
         old_task_created_at = task_detail.find_element(By.ID, 'id_created_at').text
+
+        # User decides to change all task details
+        # He edits task title, description, performers and deadline
         edit_data = {
             'title': 'New title',
             'description': 'New description',
@@ -144,6 +156,10 @@ class TaskEditingTest(FunctionalTest):
         self.assertEqual(save_btn.get_attribute('value'), 'Save')
         save_btn.click()
 
+        edited_task_planned_labor_intensity = datetime.strptime(
+            edit_data['deadline'], '%Y-%m-%d %H:%M'
+        ) - old_task_created_at
+
         # The page updates and now shows new task details, but created_at value hasn't changed
         self.wait_for(
             lambda: self.assert_task_details_equals_to(
@@ -152,7 +168,8 @@ class TaskEditingTest(FunctionalTest):
                 performers=edit_data['performers'],
                 deadline=edit_data['deadline'],
                 created_at=datetime.strptime(old_task_created_at, '%Y-%m-%d %H:%M'),
-                status_label=edit_data['status_label']
+                status_label=edit_data['status_label'],
+                planned_labor_intensity=edited_task_planned_labor_intensity
             )
         )
 

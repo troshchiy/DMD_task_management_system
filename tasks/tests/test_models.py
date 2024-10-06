@@ -102,11 +102,78 @@ class TaskModelTest(UnitTest):
         self.assertEqual(Task.objects.count(), 1)
         self.assertIsNone(Task.objects.first().parent)
 
-    def test_automatically_set_created_at_field_value(self):
+    def test_automatically_sets_created_at_field_value(self):
         self.create_task().save()
 
         task = Task.objects.first()
         self.assertAlmostEqual(task.created_at, timezone.now(), delta=datetime.timedelta(seconds=1))
+
+    def test_automatically_sets_planned_labor_intensity_field_value_when_creating_task(self):
+        task = self.create_task()
+        task.save()
+
+        added_task = Task.objects.first()
+        expected_planned_labor_intensity = added_task.deadline - added_task.created_at
+        self.assertEqual(added_task.planned_labor_intensity, expected_planned_labor_intensity)
+
+    def test_automatically_sets_planned_labor_intensity_field_value_when_editing_task(self):
+        task = self.create_task(deadline='2024-10-02 20:00')
+        task.save()
+
+        added_task = Task.objects.first()
+        expected_planned_labor_intensity_1 = added_task.deadline - added_task.created_at
+        self.assertEqual(added_task.planned_labor_intensity, expected_planned_labor_intensity_1)
+
+        task.deadline = datetime.datetime(2027, 5, 6, 16,10)
+        task.save()
+
+        edited_task = Task.objects.first()
+        expected_planned_labor_intensity_2 = edited_task.deadline - edited_task.created_at
+        self.assertEqual(edited_task.planned_labor_intensity, expected_planned_labor_intensity_2)
+        self.assertNotEqual(
+            expected_planned_labor_intensity_1,
+            expected_planned_labor_intensity_2
+        )
+
+    def test_automatically_edits_planned_labor_intensity_field_value_when_creating_subtasks(self):
+        task = self.create_task()
+        task.save()
+        subtask_1 = self.create_task(parent=task)
+        subtask_1.save()
+
+        task = Task.objects.get(id=task.id)
+        subtask_1 = Task.objects.get(id=subtask_1.id)
+        expected_planned_labor_intensity = ((task.deadline - task.created_at)
+                                            + (subtask_1.deadline - subtask_1.created_at))
+        self.assertEqual(task.planned_labor_intensity, expected_planned_labor_intensity)
+
+        subtask_2 = self.create_task(parent=task)
+        subtask_2.save()
+
+        task = Task.objects.get(id=task.id)
+        subtask_2 = Task.objects.get(id=subtask_2.id)
+        expected_planned_labor_intensity = ((task.deadline - task.created_at)
+                                            + (subtask_1.deadline - subtask_1.created_at)
+                                            + (subtask_2.deadline - subtask_2.created_at))
+        self.assertEqual(task.planned_labor_intensity, expected_planned_labor_intensity)
+
+    def test_automatically_edits_planned_labor_intensity_field_value_when_deleting_subtasks(self):
+        task = self.create_task()
+        task.save()
+        subtask_1 = self.create_task(parent=task)
+        subtask_1.save()
+
+        task = Task.objects.get(id=task.id)
+        subtask_1 = Task.objects.get(id=subtask_1.id)
+        expected_planned_labor_intensity = ((task.deadline - task.created_at)
+                                            + (subtask_1.deadline - subtask_1.created_at))
+        self.assertEqual(task.planned_labor_intensity, expected_planned_labor_intensity)
+
+        subtask_1.delete()
+
+        task = Task.objects.get(id=task.id)
+        expected_planned_labor_intensity = task.deadline - task.created_at
+        self.assertEqual(task.planned_labor_intensity, expected_planned_labor_intensity)
 
     def test_sets_status_ASSIGNED_when_its_null(self):
         task = self.create_task(status=None)
@@ -129,7 +196,6 @@ class TaskModelTest(UnitTest):
             task.status = status
             task.save()             # Should not raise ValidationError
             self.assertEqual(Task.objects.first().status, status)
-
 
     def test_cannot_save_task_with_invalid_status(self):
         task = self.create_task()

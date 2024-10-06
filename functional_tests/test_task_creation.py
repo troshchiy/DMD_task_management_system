@@ -1,4 +1,4 @@
-import datetime
+from datetime import datetime
 
 from selenium.webdriver.common.by import By
 from selenium.webdriver.common.keys import Keys
@@ -161,8 +161,13 @@ class TaskCreationTest(FunctionalTest):
             'performers': 'Vlad Troshchiy',
             'deadline': '2024-10-03 13:00'
         }
-        brew_the_tea_created_at = datetime.datetime.now()
+        brew_the_tea_created_at = datetime.now()
         self.add_task(form=add_task_form, **brew_the_tea_task_data)
+
+        bre_the_tea_created_at = datetime.now()
+        brew_the_tea_planned_labor_intensity = datetime.strptime(
+            brew_the_tea_task_data['deadline'], '%Y-%m-%d %H:%M'
+        ) - brew_the_tea_created_at
 
         # Then user hits on the task title at the sidebar
         self.wait_for_item_in_tasks_list('Brew the tea').click()
@@ -183,15 +188,23 @@ class TaskCreationTest(FunctionalTest):
         self.assertEqual(add_subtask_btn.get_property('value'), 'Add subtask')
         add_subtask_btn.click()
 
+        heat_water_created_at = datetime.now()
+        heat_water_planned_labor_intensity = datetime.strptime(
+            '2024-10-03 12:50', '%Y-%m-%d %H:%M'
+        ) - heat_water_created_at
+        brew_the_tea_planned_labor_intensity += heat_water_planned_labor_intensity
+
         # The page is being updated, and now the page contains added subtask title in the tasks list
         self.wait_for_item_in_tasks_list('Heat water')
 
         # User notices that the page still shows the "Brew the tea" task detail page
+        # And the task's planned labor intensity increased by subtask's planned labor intensity value
         self.wait_for(
             lambda: self.assert_task_details_equals_to(
                 **brew_the_tea_task_data,
                 created_at=brew_the_tea_created_at,
-                status_label='Assigned'
+                status_label='Assigned',
+                planned_labor_intensity=brew_the_tea_planned_labor_intensity
             )
         )
 
@@ -210,11 +223,28 @@ class TaskCreationTest(FunctionalTest):
             deadline='2024-10-04 13:00'
         )
 
+        steep_the_tea_created_at = datetime.now()
+        steep_the_tea_planned_labor_intensity = datetime.strptime(
+            '2024-10-03 12:50', '%Y-%m-%d %H:%M'
+        ) - steep_the_tea_created_at
+        brew_the_tea_planned_labor_intensity += steep_the_tea_planned_labor_intensity
+
         # The page updates again, and now shows both subtask on the sidebar tasks list
         self.wait_for_item_in_tasks_list('Heat water')
         self.wait_for_item_in_tasks_list('Steep the tea')
 
-        # Also the subtasks are present on the "Brew the tea" task details page
+        # The page still shows the "Brew the tea" task detail page
+        # And the task's planned labor intensity increased again
+        self.wait_for(
+            lambda: self.assert_task_details_equals_to(
+                **brew_the_tea_task_data,
+                created_at=brew_the_tea_created_at,
+                status_label='Assigned',
+                planned_labor_intensity=brew_the_tea_planned_labor_intensity
+            )
+        )
+
+        # And the subtasks are present on the "Brew the tea" task details page
         subtasks_list = self.browser.find_element(By.ID, 'subtasks-list').find_elements(By.CLASS_NAME, 'task-title')
         self.assertIn('Heat water', [subtask.text for subtask in subtasks_list])
         self.assertIn('Steep the tea', [subtask.text for subtask in subtasks_list])

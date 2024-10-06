@@ -20,6 +20,7 @@ class Task(models.Model):
                               choices=Status.choices,
                               default=Status.ASSIGNED,
                               blank=True)
+    planned_labor_intensity = models.DurationField(null=True, blank=True)
 
     def clean(self):
         existing_task = None
@@ -57,7 +58,24 @@ class Task(models.Model):
                     except ValidationError as e:
                         raise ValidationError(f'The subtask "{subtask.title}" cannot be completed. {e.messages[0]}')
 
-        return models.Model.save(self)
+        models.Model.save(self)
+        self.calculate_planned_labor_intensity()
+
+    def delete(self):
+        models.Model.delete(self)
+        if self.parent:
+            self.parent.calculate_planned_labor_intensity()
+
+    def calculate_planned_labor_intensity(self):
+        planned_labor_intensity = Task.objects.get(id=self.id).deadline - self.created_at
+        for subtask in self.task_set.all():
+            planned_labor_intensity += subtask.planned_labor_intensity
+
+        self.planned_labor_intensity = planned_labor_intensity
+        models.Model.save(self)
+
+        if self.parent:
+            self.parent.calculate_planned_labor_intensity()
 
     def get_absolute_url(self):
         return reverse('task_detail', args=[self.id])
