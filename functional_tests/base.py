@@ -98,8 +98,10 @@ class FunctionalTest(StaticLiveServerTestCase):
                 self.assertTrue(option.get_attribute('selected'))
 
         actual_planned_labor_intensity = task_detail_form.find_element(By.ID, 'id_planned_labor_intensity')
-        self.assertAlmostEqual(
-            datetime.datetime.strptime(actual_planned_labor_intensity.text, '%Y-%m-%d %H:%M'),
-            planned_labor_intensity,
-            delta=datetime.timedelta(minutes=(1))
+        days = planned_labor_intensity.days
+        hours, seconds = divmod(planned_labor_intensity.seconds, 3600)
+        minutes, seconds = divmod(seconds, 60)
+        self.assertEqual(
+            actual_planned_labor_intensity.text,
+            f'{days} days, {hours} hours, {minutes} minutes'
         )

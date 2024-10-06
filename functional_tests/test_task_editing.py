@@ -24,7 +24,7 @@ class TaskEditingTest(FunctionalTest):
         buy_tea_created_at = datetime.now()
         buy_tea_planned_labor_intensity = datetime.strptime(
             buy_tea_task_data['deadline'], '%Y-%m-%d %H:%M'
-        ) - buy_tea_created_at
+        ) - buy_tea_created_at.replace(second=0, microsecond=0)
 
         self.wait_for_item_in_tasks_list('Buy tea')
 
@@ -41,7 +41,7 @@ class TaskEditingTest(FunctionalTest):
         brew_the_tea_created_at = datetime.now()
         brew_the_tea_planned_labor_intensity = datetime.strptime(
             brew_the_tea_task_data['deadline'], '%Y-%m-%d %H:%M'
-        ) - brew_the_tea_created_at
+        ) - brew_the_tea_created_at.replace(second=0, microsecond=0)
 
 
         self.wait_for_item_in_tasks_list('Brew the tea')
@@ -125,8 +125,8 @@ class TaskEditingTest(FunctionalTest):
             'title': 'New title',
             'description': 'New description',
             'performers': 'New performers',
-            'deadline': '2025-01-29 08:00',
-            'status_label': 'In Progress'
+            'deadline': '2024-10-07 13:00',
+            'status_label': 'In progress'
         }
 
         title_inputbox = task_detail.find_element(By.ID, 'id_title')
@@ -156,9 +156,8 @@ class TaskEditingTest(FunctionalTest):
         self.assertEqual(save_btn.get_attribute('value'), 'Save')
         save_btn.click()
 
-        edited_task_planned_labor_intensity = datetime.strptime(
-            edit_data['deadline'], '%Y-%m-%d %H:%M'
-        ) - old_task_created_at
+        edited_task_planned_labor_intensity = (datetime.strptime(edit_data['deadline'], '%Y-%m-%d %H:%M')
+                                               - datetime.strptime(old_task_created_at, '%Y-%m-%d %H:%M'))
 
         # The page updates and now shows new task details, but created_at value hasn't changed
         self.wait_for(
@@ -179,3 +178,32 @@ class TaskEditingTest(FunctionalTest):
         self.assertEqual(len(items), 1)
         self.assertIn('New title', [item.text for item in items])
         self.assertNotIn('Old title', [item.text for item in items])
+
+        # When user completed has completed the task, he decides to mark it on the site
+        task_detail = self.wait_for(lambda: self.browser.find_element(By.ID, 'task-detail'))
+        status_options = task_detail.find_element(By.ID, 'id_status').find_elements(By.TAG_NAME, 'option')
+        for option in status_options:
+            if option.text == 'Completed':
+                option.click()
+
+        task_detail.find_element(By.CLASS_NAME, 'submit-btn').click()
+
+        completed_at = datetime.now()
+        time_of_completion = completed_at.replace(second=0, microsecond=0) - datetime.strptime(old_task_created_at, '%Y-%m-%d %H:%M')
+
+        # The page updates and now shows new task details: 'Completed at' and 'Actual_time_of_completion'
+        actual_completed_at_value = self.wait_for(lambda: self.browser.find_element(By.ID, 'id_completed_at'))
+        self.assertAlmostEqual(
+            datetime.strptime(actual_completed_at_value.text, '%Y-%m-%d %H:%M'),
+            completed_at,
+            delta=timedelta(minutes=1)
+        )
+
+        actual_time_of_completion = self.wait_for(lambda: self.browser.find_element(By.ID, 'id_actual_completion_time'))
+        days = time_of_completion.days
+        hours, seconds = divmod(time_of_completion.seconds, 3600)
+        minutes, seconds = divmod(seconds, 60)
+        self.assertEqual(
+            actual_time_of_completion.text,
+            f'{days} days, {hours} hours, {minutes} minutes'
+        )

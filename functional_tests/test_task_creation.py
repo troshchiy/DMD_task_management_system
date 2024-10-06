@@ -167,7 +167,7 @@ class TaskCreationTest(FunctionalTest):
         bre_the_tea_created_at = datetime.now()
         brew_the_tea_planned_labor_intensity = datetime.strptime(
             brew_the_tea_task_data['deadline'], '%Y-%m-%d %H:%M'
-        ) - brew_the_tea_created_at
+        ) - brew_the_tea_created_at.replace(second=0, microsecond=0)
 
         # Then user hits on the task title at the sidebar
         self.wait_for_item_in_tasks_list('Brew the tea').click()
@@ -191,7 +191,7 @@ class TaskCreationTest(FunctionalTest):
         heat_water_created_at = datetime.now()
         heat_water_planned_labor_intensity = datetime.strptime(
             '2024-10-03 12:50', '%Y-%m-%d %H:%M'
-        ) - heat_water_created_at
+        ) - heat_water_created_at.replace(second=0, microsecond=0)
         brew_the_tea_planned_labor_intensity += heat_water_planned_labor_intensity
 
         # The page is being updated, and now the page contains added subtask title in the tasks list
@@ -225,8 +225,8 @@ class TaskCreationTest(FunctionalTest):
 
         steep_the_tea_created_at = datetime.now()
         steep_the_tea_planned_labor_intensity = datetime.strptime(
-            '2024-10-03 12:50', '%Y-%m-%d %H:%M'
-        ) - steep_the_tea_created_at
+            '2024-10-04 13:00', '%Y-%m-%d %H:%M'
+        ) - steep_the_tea_created_at.replace(second=0, microsecond=0)
         brew_the_tea_planned_labor_intensity += steep_the_tea_planned_labor_intensity
 
         # The page updates again, and now shows both subtask on the sidebar tasks list

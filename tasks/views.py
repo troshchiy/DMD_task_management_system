@@ -1,3 +1,6 @@
+from datetime import timezone, timedelta
+import zoneinfo
+
 from django.core.exceptions import ValidationError
 from django.shortcuts import render, redirect, get_object_or_404
 from django.http import JsonResponse
@@ -36,7 +39,7 @@ def new_subtask(request, task_id):
                                                 'task_form': TaskForm(),
                                                 'task_detail': {
                                                     'form': TaskForm(instance=task),
-                                                    'created_at': task.created_at.strftime('%Y-%m-%d %H:%M')
+                                                    'created_at': task.created_at.astimezone(timezone(timedelta(hours=7))).strftime('%Y-%m-%d %H:%M')
                                                     },
                                                 'subtask_form': subtask_form,
                                                 'tasks': Task.objects.filter(parent__isnull=True)
@@ -48,7 +51,7 @@ def task_detail(request, task_id):
 
     is_ajax = request.headers.get('X-Requested-With') == 'XMLHttpRequest'
     if is_ajax:
-        created_at = task.created_at.strftime('%Y-%m-%d %H:%M')
+        created_at = task.created_at.astimezone(timezone(timedelta(hours=7))).strftime('%Y-%m-%d %H:%M')
         form = render_to_string(
             'tasks/task_detail.html',
             {
@@ -79,7 +82,7 @@ def task_detail(request, task_id):
                           'task_form': TaskForm(),
                           'task_detail': {
                               'form': task_detail_form,
-                              'created_at': task.created_at.strftime('%Y-%m-%d %H:%M')
+                              'created_at': task.created_at.astimezone(timezone(timedelta(hours=7))).strftime('%Y-%m-%d %H:%M')
                           },
                           'subtask_form': TaskForm(),
                           'tasks': Task.objects.filter(parent__isnull=True)
@@ -100,7 +103,7 @@ def delete_task(request, task_id):
                       'task_form': TaskForm(),
                       'task_detail': {
                           'form': TaskForm(instance=task),
-                          'created_at': task.created_at.strftime('%Y-%m-%d %H:%M')
+                          'created_at': task.created_at.astimezone(timezone(timedelta(hours=7))).strftime('%Y-%m-%d %H:%M')
                       },
                       'subtask_form': TaskForm(),
                       'tasks': Task.objects.filter(parent__isnull=True)

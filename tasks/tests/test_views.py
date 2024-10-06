@@ -1,5 +1,6 @@
 import json
 import re
+from datetime import timezone, timedelta
 
 from django.http import JsonResponse
 from django.template.loader import render_to_string
@@ -50,7 +51,7 @@ class NewTaskTest(UnitTest):
         self.assertEqual(added_task.description, UnitTest.VALID_TASK_DATA['description'])
         self.assertEqual(added_task.performers, UnitTest.VALID_TASK_DATA['performers'])
         self.assertEqual(
-            added_task.deadline.strftime(UnitTest.DATETIME_FORMAT),
+            added_task.deadline.astimezone(timezone(timedelta(hours=7))).strftime(UnitTest.DATETIME_FORMAT),
             UnitTest.VALID_TASK_DATA['deadline']
         )
 
@@ -110,7 +111,7 @@ class NewSubtaskTest(UnitTest):
         self.assertEqual(subtask.description, subtask_data['description'])
         self.assertEqual(subtask.performers, subtask_data['performers'])
         self.assertEqual(
-            subtask.deadline.strftime(UnitTest.DATETIME_FORMAT),
+            subtask.deadline.astimezone(timezone(timedelta(hours=7))).strftime(UnitTest.DATETIME_FORMAT),
             subtask_data['deadline']
         )
 
@@ -153,7 +154,7 @@ class NewSubtaskTest(UnitTest):
         self.assertIsInstance(response.context['task_detail']['form'], TaskForm)
         self.assertEqual(
             response.context['task_detail']['created_at'],
-            task.created_at.strftime(UnitTest.DATETIME_FORMAT)
+            task.created_at.astimezone(timezone(timedelta(hours=7))).strftime(UnitTest.DATETIME_FORMAT)
         )
 
     def test_for_invalid_input_passes_subtask_form_to_template(self):
@@ -202,7 +203,7 @@ class TaskDetailTest(UnitTest):
             {
             'task_detail': {
                 'form': TaskForm(instance=task),
-                'created_at': task.created_at.strftime('%Y-%m-%d %H:%M')
+                'created_at': task.created_at.astimezone(timezone(timedelta(hours=7))).strftime('%Y-%m-%d %H:%M')
             },
             'subtask_form': TaskForm()
             }
@@ -234,12 +235,12 @@ class TaskDetailTest(UnitTest):
         response = self.client.get(f'/tasks/{task.id}/')
         self.assertEqual(
             response.context['task_detail']['created_at'],
-            task.created_at.strftime(UnitTest.DATETIME_FORMAT)
+            task.created_at.astimezone(timezone(timedelta(hours=7))).strftime(UnitTest.DATETIME_FORMAT)
         )
 
         ajax_response = self.ajax_get(task.id)
         form = json.loads(ajax_response.content)['form']
-        self.assertIn(task.created_at.strftime(UnitTest.DATETIME_FORMAT), form)
+        self.assertIn(task.created_at.astimezone(timezone(timedelta(hours=7))).strftime(UnitTest.DATETIME_FORMAT), form)
 
     def test_passes_correct_url_to_ajax_response(self):
         task = self.create_task()
@@ -268,6 +269,36 @@ class TaskDetailTest(UnitTest):
         self.assertIn('id="id_status"', task_detail_form)
         self.assertIn('class="submit-btn"', task_detail_form)
         self.assertIn('id="id_planned_labor_intensity"', task_detail_form)
+        self.assertIn('id="id_created_at"', task_detail_form)
+
+    def test_for_AJAX_shows_correct_completed_at_value(self):
+        task = self.create_task(status='CM')
+        task.save(clean=False)
+
+        ajax_response = self.ajax_get(task.id)
+        form = json.loads(ajax_response.content)['form']
+
+        task = Task.objects.first()
+        expected_completed_at = task.completed_at
+        actual_completed_at = re.findall('<div id="id_completed_at".*?>(.*?)</div>', form)[0]
+        self.assertEqual(
+            expected_completed_at.astimezone(timezone(timedelta(hours=7))).strftime(UnitTest.DATETIME_FORMAT),
+            actual_completed_at
+        )
+
+    def test_for_AJAX_shows_correct_actual_completion_time_value(self):
+        task = self.create_task(status='CM')
+        task.save(clean=False)
+
+        ajax_response = self.ajax_get(task.id)
+        form = json.loads(ajax_response.content)['form']
+
+        task = Task.objects.first()
+        actual_completion_time = re.findall('<div id="id_actual_completion_time".*?>(.*?)</div>', form)[0]
+        self.assertEqual(
+            task.get_actual_completion_time(),
+            actual_completion_time
+        )
 
     def test_for_AJAX_shows_correct_planned_labor_intensity_value(self):
         task = self.create_task()
@@ -277,10 +308,9 @@ class TaskDetailTest(UnitTest):
         form = json.loads(ajax_response.content)['form']
 
         task = Task.objects.first()
-        expected_planned_labor_intensity = task.deadline - task.created_at
         actual_planned_labor_intensity = re.findall('<div id="id_planned_labor_intensity".*?>(.*?)</div>', form)[0]
         self.assertEqual(
-            str(expected_planned_labor_intensity),
+            task.get_planned_labor_intensity(),
             actual_planned_labor_intensity
         )
 
@@ -296,14 +326,9 @@ class TaskDetailTest(UnitTest):
         form = json.loads(ajax_response.content)['form']
 
         task = Task.objects.get(id=task.id)
-        subtask_1 = Task.objects.get(id=subtask_1.id)
-        subtask_2 = Task.objects.get(id=subtask_2.id)
-        expected_planned_labor_intensity = ((task.deadline - task.created_at)
-                                            + (subtask_1.deadline - subtask_1.created_at)
-                                            + (subtask_2.deadline - subtask_2.created_at))
         actual_planned_labor_intensity = re.findall('<div id="id_planned_labor_intensity".*?>(.*?)</div>', form)[0]
         self.assertEqual(
-            str(expected_planned_labor_intensity),
+            task.get_planned_labor_intensity(),
             actual_planned_labor_intensity
         )
 
@@ -321,12 +346,9 @@ class TaskDetailTest(UnitTest):
         form = json.loads(ajax_response.content)['form']
 
         task = Task.objects.get(id=task.id)
-        subtask_1 = Task.objects.get(id=subtask_1.id)
-        expected_planned_labor_intensity = ((task.deadline - task.created_at)
-                                            + (subtask_1.deadline - subtask_1.created_at))
         actual_planned_labor_intensity = re.findall('<div id="id_planned_labor_intensity".*?>(.*?)</div>', form)[0]
         self.assertEqual(
-            str(expected_planned_labor_intensity),
+            task.get_planned_labor_intensity(),
             actual_planned_labor_intensity
         )
 
@@ -347,6 +369,7 @@ class TaskDetailTest(UnitTest):
         self.assertIn('id="id_status"', task_detail_form)
         self.assertIn('class="submit-btn"', task_detail_form)
         self.assertIn('id="id_planned_labor_intensity"', task_detail_form)
+        self.assertIn('id="id_created_at"', task_detail_form)
 
     def test_for_GET_shows_correct_planned_labor_intensity_value(self):
         task = self.create_task()
@@ -355,10 +378,9 @@ class TaskDetailTest(UnitTest):
         response = self.client.get(f'/tasks/{task.id}/').content.decode('utf8')
 
         task = Task.objects.first()
-        expected_planned_labor_intensity = task.deadline - task.created_at
         actual_planned_labor_intensity = re.findall('<div id="id_planned_labor_intensity".*?>(.*?)</div>', response)[0]
         self.assertEqual(
-            str(expected_planned_labor_intensity),
+            task.get_planned_labor_intensity(),
             actual_planned_labor_intensity
         )
 
@@ -375,12 +397,10 @@ class TaskDetailTest(UnitTest):
         task = Task.objects.get(id=task.id)
         subtask_1 = Task.objects.get(id=subtask_1.id)
         subtask_2 = Task.objects.get(id=subtask_2.id)
-        expected_planned_labor_intensity = ((task.deadline - task.created_at)
-                                            + (subtask_1.deadline - subtask_1.created_at)
-                                            + (subtask_2.deadline - subtask_2.created_at))
+
         actual_planned_labor_intensity = re.findall('<div id="id_planned_labor_intensity".*?>(.*?)</div>', response)[0]
         self.assertEqual(
-            str(expected_planned_labor_intensity),
+            task.get_planned_labor_intensity(),
             actual_planned_labor_intensity
         )
 
@@ -397,13 +417,23 @@ class TaskDetailTest(UnitTest):
         response = self.client.get(f'/tasks/{task.id}/').content.decode('utf8')
 
         task = Task.objects.get(id=task.id)
-        subtask_1 = Task.objects.get(id=subtask_1.id)
-        expected_planned_labor_intensity = ((task.deadline - task.created_at)
-                                            + (subtask_1.deadline - subtask_1.created_at))
         actual_planned_labor_intensity = re.findall('<div id="id_planned_labor_intensity".*?>(.*?)</div>', response)[0]
         self.assertEqual(
-            str(expected_planned_labor_intensity),
+            task.get_planned_labor_intensity(),
             actual_planned_labor_intensity
+        )
+
+    def test_for_GET_shows_correct_actual_completion_time_value(self):
+        task = self.create_task(status='CM')
+        task.save(clean=False)
+
+        response = self.client.get(f'/tasks/{task.id}/').content.decode('utf8')
+
+        task = Task.objects.first()
+        actual_completion_time = re.findall('<div id="id_actual_completion_time".*?>(.*?)</div>', response)[0]
+        self.assertEqual(
+            task.get_actual_completion_time(),
+            actual_completion_time
         )
 
     def test_shows_add_subtask_form_on_page(self):
@@ -473,7 +503,7 @@ class TaskDetailTest(UnitTest):
         self.assertEqual(edited_task.description, new_data['description'])
         self.assertEqual(edited_task.performers, new_data['performers'])
         self.assertEqual(
-            edited_task.deadline.strftime(UnitTest.DATETIME_FORMAT),
+            edited_task.deadline.astimezone(timezone(timedelta(hours=7))).strftime(UnitTest.DATETIME_FORMAT),
             new_data['deadline']
         )
 
@@ -518,7 +548,7 @@ class TaskDetailTest(UnitTest):
         self.assertEqual(edit_task.title, task_data['title'])
         self.assertEqual(edit_task.description, task_data['description'])
         self.assertEqual(edit_task.performers, task_data['performers'])
-        self.assertEqual(edit_task.deadline.strftime('%Y-%m-%d %H:%M'), task_data['deadline'])
+        self.assertEqual(edit_task.deadline.astimezone(timezone(timedelta(hours=7))).strftime('%Y-%m-%d %H:%M'), task_data['deadline'])
 
     def test_for_invalid_input_renders_home_template(self):
         response = self.post_invalid_input()
@@ -697,7 +727,7 @@ class DeleteTaskTest(UnitTest):
         self.assertIsInstance(response.context['task_detail']['form'], TaskForm)
         self.assertEqual(
             response.context['task_detail']['created_at'],
-            task.created_at.strftime(UnitTest.DATETIME_FORMAT)
+            task.created_at.astimezone(timezone(timedelta(hours=7))).strftime(UnitTest.DATETIME_FORMAT)
         )
 
     def test_for_invalid_POST_passes_subtask_form_to_template(self):

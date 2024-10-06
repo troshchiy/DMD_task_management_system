@@ -1,3 +1,5 @@
+from datetime import timedelta, timezone
+
 from tasks.models import Task
 from tasks.forms import TaskForm, EmptyFieldErrorMessage
 from .base import UnitTest
@@ -14,7 +16,7 @@ class TaskFormTest(UnitTest):
         self.assertEqual(added_task.description, UnitTest.VALID_TASK_DATA['description'])
         self.assertEqual(added_task.performers, UnitTest.VALID_TASK_DATA['performers'])
         self.assertEqual(
-            added_task.deadline.strftime(UnitTest.DATETIME_FORMAT),
+            added_task.deadline.astimezone(timezone(timedelta(hours=7))).strftime(UnitTest.DATETIME_FORMAT),
             UnitTest.VALID_TASK_DATA['deadline']
         )
 

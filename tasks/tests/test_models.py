@@ -1,4 +1,6 @@
 import datetime
+import zoneinfo
+from datetime import tzinfo
 
 from django.core.exceptions import ValidationError
 from django.utils import timezone
@@ -19,7 +21,7 @@ class TaskModelTest(UnitTest):
         self.assertEqual(UnitTest.VALID_TASK_DATA['performers'], saved_task.performers)
         self.assertEqual(
             UnitTest.VALID_TASK_DATA['deadline'],
-            saved_task.deadline.strftime(UnitTest.DATETIME_FORMAT)
+            saved_task.deadline.astimezone(datetime.timezone(datetime.timedelta(hours=7))).strftime(UnitTest.DATETIME_FORMAT)
         )
 
     def assert_cannot_save_task_with_blank_field(self, task_instance, field_name):
@@ -113,7 +115,7 @@ class TaskModelTest(UnitTest):
         task.save()
 
         added_task = Task.objects.first()
-        expected_planned_labor_intensity = added_task.deadline - added_task.created_at
+        expected_planned_labor_intensity = added_task.deadline - added_task.created_at.replace(second=0, microsecond=0)
         self.assertEqual(added_task.planned_labor_intensity, expected_planned_labor_intensity)
 
     def test_automatically_sets_planned_labor_intensity_field_value_when_editing_task(self):
@@ -121,14 +123,14 @@ class TaskModelTest(UnitTest):
         task.save()
 
         added_task = Task.objects.first()
-        expected_planned_labor_intensity_1 = added_task.deadline - added_task.created_at
+        expected_planned_labor_intensity_1 = added_task.deadline - added_task.created_at.replace(second=0, microsecond=0)
         self.assertEqual(added_task.planned_labor_intensity, expected_planned_labor_intensity_1)
 
         task.deadline = datetime.datetime(2027, 5, 6, 16,10)
         task.save()
 
         edited_task = Task.objects.first()
-        expected_planned_labor_intensity_2 = edited_task.deadline - edited_task.created_at
+        expected_planned_labor_intensity_2 = edited_task.deadline - edited_task.created_at.replace(second=0, microsecond=0)
         self.assertEqual(edited_task.planned_labor_intensity, expected_planned_labor_intensity_2)
         self.assertNotEqual(
             expected_planned_labor_intensity_1,
@@ -143,8 +145,8 @@ class TaskModelTest(UnitTest):
 
         task = Task.objects.get(id=task.id)
         subtask_1 = Task.objects.get(id=subtask_1.id)
-        expected_planned_labor_intensity = ((task.deadline - task.created_at)
-                                            + (subtask_1.deadline - subtask_1.created_at))
+        expected_planned_labor_intensity = ((task.deadline - task.created_at.replace(second=0, microsecond=0))
+                                            + (subtask_1.deadline - subtask_1.created_at.replace(second=0, microsecond=0)))
         self.assertEqual(task.planned_labor_intensity, expected_planned_labor_intensity)
 
         subtask_2 = self.create_task(parent=task)
@@ -152,9 +154,9 @@ class TaskModelTest(UnitTest):
 
         task = Task.objects.get(id=task.id)
         subtask_2 = Task.objects.get(id=subtask_2.id)
-        expected_planned_labor_intensity = ((task.deadline - task.created_at)
-                                            + (subtask_1.deadline - subtask_1.created_at)
-                                            + (subtask_2.deadline - subtask_2.created_at))
+        expected_planned_labor_intensity = ((task.deadline - task.created_at.replace(second=0, microsecond=0))
+                                            + (subtask_1.deadline - subtask_1.created_at.replace(second=0, microsecond=0))
+                                            + (subtask_2.deadline - subtask_2.created_at.replace(second=0, microsecond=0)))
         self.assertEqual(task.planned_labor_intensity, expected_planned_labor_intensity)
 
     def test_automatically_edits_planned_labor_intensity_field_value_when_deleting_subtasks(self):
@@ -165,15 +167,35 @@ class TaskModelTest(UnitTest):
 
         task = Task.objects.get(id=task.id)
         subtask_1 = Task.objects.get(id=subtask_1.id)
-        expected_planned_labor_intensity = ((task.deadline - task.created_at)
-                                            + (subtask_1.deadline - subtask_1.created_at))
+        expected_planned_labor_intensity = ((task.deadline - task.created_at.replace(second=0, microsecond=0))
+                                            + (subtask_1.deadline - subtask_1.created_at.replace(second=0, microsecond=0)))
         self.assertEqual(task.planned_labor_intensity, expected_planned_labor_intensity)
 
         subtask_1.delete()
 
         task = Task.objects.get(id=task.id)
-        expected_planned_labor_intensity = task.deadline - task.created_at
+        expected_planned_labor_intensity = task.deadline - task.created_at.replace(second=0, microsecond=0)
         self.assertEqual(task.planned_labor_intensity, expected_planned_labor_intensity)
+
+    def test_automatically_sets_completed_at_field_value(self):
+        self.create_task().save()
+
+        task = Task.objects.first()
+        self.assertIsNone(task.completed_at)
+
+        task.status = 'CM'
+        task.save(clean=False)
+
+        task = Task.objects.first()
+        self.assertAlmostEqual(task.completed_at, timezone.now(), delta=datetime.timedelta(seconds=1))
+
+    def test_automatically_sets_actual_completion_time_field_value_when_completing_task(self):
+        task = self.create_task(status='CM')
+        task.save(clean=False)
+
+        added_task = Task.objects.first()
+        expected_actual_completion_time = added_task.completed_at - added_task.created_at
+        self.assertEqual(added_task.actual_completion_time, expected_actual_completion_time)
 
     def test_sets_status_ASSIGNED_when_its_null(self):
         task = self.create_task(status=None)
