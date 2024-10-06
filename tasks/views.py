@@ -35,15 +35,10 @@ def new_subtask(request, task_id):
         subtask_form.save()
         return redirect(task)
 
-    return render(request, 'tasks/home.html', {
-                                                'task_form': TaskForm(),
-                                                'task_detail': {
-                                                    'form': TaskForm(instance=task),
-                                                    'created_at': task.created_at.astimezone(timezone(timedelta(hours=7))).strftime('%Y-%m-%d %H:%M')
-                                                    },
+    return render(request, 'tasks/home.html', {'task_form': TaskForm(),
+                                                'task_detail_form': TaskForm(instance=task),
                                                 'subtask_form': subtask_form,
-                                                'tasks': Task.objects.filter(parent__isnull=True)
-                                               })
+                                                'tasks': Task.objects.filter(parent__isnull=True)})
 
 
 def task_detail(request, task_id):
@@ -51,18 +46,9 @@ def task_detail(request, task_id):
 
     is_ajax = request.headers.get('X-Requested-With') == 'XMLHttpRequest'
     if is_ajax:
-        created_at = task.created_at.astimezone(timezone(timedelta(hours=7))).strftime('%Y-%m-%d %H:%M')
-        form = render_to_string(
-            'tasks/task_detail.html',
-            {
-            'task_detail': {
-                'form': TaskForm(instance=task),
-                'created_at': created_at
-                },
-            'subtask_form': TaskForm()
-            },
-            request=request
-        )
+        form = render_to_string('tasks/task_detail.html',
+                                {'task_detail_form': TaskForm(instance=task), 'subtask_form': TaskForm()},
+                                request=request)
         return JsonResponse({'form': form, 'url': task.get_absolute_url()})
     else:
         task_detail_form = TaskForm(instance=task)
@@ -76,17 +62,10 @@ def task_detail(request, task_id):
                 except ValidationError as e:
                     task_detail_form.add_error(None, e)
 
-        return render(request,
-                      'tasks/home.html',
-                      {
-                          'task_form': TaskForm(),
-                          'task_detail': {
-                              'form': task_detail_form,
-                              'created_at': task.created_at.astimezone(timezone(timedelta(hours=7))).strftime('%Y-%m-%d %H:%M')
-                          },
-                          'subtask_form': TaskForm(),
-                          'tasks': Task.objects.filter(parent__isnull=True)
-                      })
+        return render(request, 'tasks/home.html', {'task_form': TaskForm(),
+                                                   'task_detail_form': task_detail_form,
+                                                    'subtask_form': TaskForm(),
+                                                    'tasks': Task.objects.filter(parent__isnull=True)})
 
 
 def delete_task(request, task_id):
@@ -97,14 +76,7 @@ def delete_task(request, task_id):
     else:
         messages.error(request, 'Error deleting the task')
 
-    return render(request,
-                  'tasks/home.html',
-                  {
-                      'task_form': TaskForm(),
-                      'task_detail': {
-                          'form': TaskForm(instance=task),
-                          'created_at': task.created_at.astimezone(timezone(timedelta(hours=7))).strftime('%Y-%m-%d %H:%M')
-                      },
-                      'subtask_form': TaskForm(),
-                      'tasks': Task.objects.filter(parent__isnull=True)
-                  })
+    return render(request, 'tasks/home.html', {'task_form': TaskForm(),
+                                                'task_detail_form': TaskForm(instance=task),
+                                                'subtask_form': TaskForm(),
+                                                'tasks': Task.objects.filter(parent__isnull=True)})

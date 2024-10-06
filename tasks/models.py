@@ -105,5 +105,8 @@ class Task(models.Model):
         if self.completed_at:
             return self.completed_at.astimezone(datetime.timezone(datetime.timedelta(hours=7))).strftime('%Y-%m-%d %H:%M')
 
+    def get_created_at(self):
+        return self.created_at.astimezone(datetime.timezone(datetime.timedelta(hours=7))).strftime('%Y-%m-%d %H:%M')
+
     def get_absolute_url(self):
         return reverse('task_detail', args=[self.id])

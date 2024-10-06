@@ -147,15 +147,11 @@ class NewSubtaskTest(UnitTest):
         response = self.post_invalid_input()
         self.assertIsInstance(response.context['task_form'], TaskForm)
 
-    def test_for_invalid_input_passes_task_detail_to_template(self):
+    def test_for_invalid_input_passes_task_detail_form_to_template(self):
         task = self.create_task()
         task.save()
         response = self.post_invalid_input()
-        self.assertIsInstance(response.context['task_detail']['form'], TaskForm)
-        self.assertEqual(
-            response.context['task_detail']['created_at'],
-            task.created_at.astimezone(timezone(timedelta(hours=7))).strftime(UnitTest.DATETIME_FORMAT)
-        )
+        self.assertIsInstance(response.context['task_detail_form'], TaskForm)
 
     def test_for_invalid_input_passes_subtask_form_to_template(self):
         response = self.post_invalid_input()
@@ -198,16 +194,8 @@ class TaskDetailTest(UnitTest):
         response = self.ajax_get(task.id)
 
         form = json.loads(response.content)['form']
-        expected_form = render_to_string(
-            'tasks/task_detail.html',
-            {
-            'task_detail': {
-                'form': TaskForm(instance=task),
-                'created_at': task.created_at.astimezone(timezone(timedelta(hours=7))).strftime('%Y-%m-%d %H:%M')
-            },
-            'subtask_form': TaskForm()
-            }
-        )
+        expected_form = render_to_string('tasks/task_detail.html', {'task_detail_form': TaskForm(instance=task),
+                                                                    'subtask_form': TaskForm()})
 
         csrf_token_input = re.findall('<input type="hidden" name="csrfmiddlewaretoken".*?>', form)[0]
         form_without_csrf = form.replace(csrf_token_input, '')  # render_to_string can't render csrf token without request object
@@ -221,20 +209,21 @@ class TaskDetailTest(UnitTest):
         correct_task.save()
 
         response = self.client.get(f'/tasks/{correct_task.id}/')
-        self.assertEqual(response.context['task_detail']['form'].instance, correct_task)
+        self.assertEqual(response.context['task_detail_form'].instance, correct_task)
 
         ajax_response = self.ajax_get(correct_task.id)
         ajax_response_json = json.loads(ajax_response.content)
         self.assertIn(correct_task.title, ajax_response_json['form'])
         self.assertNotIn(other_task.title, ajax_response_json['form'])
 
-    def test_passes_correct_created_at_value_to_template(self):
+    def test_shows_correct_created_at_value_to_template(self):
         task = self.create_task()
         task.save()
 
-        response = self.client.get(f'/tasks/{task.id}/')
+        response = self.client.get(f'/tasks/{task.id}/').content.decode('utf8')
+        actual_created_at = re.findall('id="id_created_at".*?>(.*?)</', response)[0]
         self.assertEqual(
-            response.context['task_detail']['created_at'],
+            actual_created_at,
             task.created_at.astimezone(timezone(timedelta(hours=7))).strftime(UnitTest.DATETIME_FORMAT)
         )
 
@@ -561,7 +550,7 @@ class TaskDetailTest(UnitTest):
 
     def test_for_invalid_input_passes_task_detail_form_to_template(self):
         response = self.post_invalid_input()
-        self.assertIsInstance(response.context['task_detail']['form'], TaskForm)
+        self.assertIsInstance(response.context['task_detail_form'], TaskForm)
 
     def test_for_invalid_input_passes_subtask_form_to_template(self):
         response = self.post_invalid_input()
@@ -720,15 +709,11 @@ class DeleteTaskTest(UnitTest):
         response = self.post_invalid_data()
         self.assertIsInstance(response.context['task_form'], TaskForm)
 
-    def test_for_invalid_POST_passes_task_detail_to_template(self):
+    def test_for_invalid_POST_passes_task_detail_form_to_template(self):
         task = self.create_task()
         task.save()
         response = self.post_invalid_data()
-        self.assertIsInstance(response.context['task_detail']['form'], TaskForm)
-        self.assertEqual(
-            response.context['task_detail']['created_at'],
-            task.created_at.astimezone(timezone(timedelta(hours=7))).strftime(UnitTest.DATETIME_FORMAT)
-        )
+        self.assertIsInstance(response.context['task_detail_form'], TaskForm)
 
     def test_for_invalid_POST_passes_subtask_form_to_template(self):
         response = self.post_invalid_data()
