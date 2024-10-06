@@ -1,6 +1,3 @@
-from datetime import timezone, timedelta
-import zoneinfo
-
 from django.core.exceptions import ValidationError
 from django.shortcuts import render, redirect, get_object_or_404
 from django.http import JsonResponse
@@ -12,8 +9,7 @@ from .forms import TaskForm
 
 
 def home_page(request):
-    return render(request,'tasks/home.html', {'task_form': TaskForm(),
-                                              'tasks': Task.objects.filter(parent__isnull=True)})
+    return render(request,'tasks/home.html', {'task_form': TaskForm()})
 
 
 def new_task(request):
@@ -22,8 +18,7 @@ def new_task(request):
         task_form.save()
         return redirect('/')
     else:
-        return render(request,'tasks/home.html', {'task_form': task_form,
-                                                  'tasks': Task.objects.filter(parent__isnull=True)})
+        return render(request,'tasks/home.html', {'task_form': task_form})
 
 
 def new_subtask(request, task_id):
@@ -37,8 +32,7 @@ def new_subtask(request, task_id):
 
     return render(request, 'tasks/home.html', {'task_form': TaskForm(),
                                                 'task_detail_form': TaskForm(instance=task),
-                                                'subtask_form': subtask_form,
-                                                'tasks': Task.objects.filter(parent__isnull=True)})
+                                                'subtask_form': subtask_form})
 
 
 def task_detail(request, task_id):
@@ -64,8 +58,7 @@ def task_detail(request, task_id):
 
         return render(request, 'tasks/home.html', {'task_form': TaskForm(),
                                                    'task_detail_form': task_detail_form,
-                                                    'subtask_form': TaskForm(),
-                                                    'tasks': Task.objects.filter(parent__isnull=True)})
+                                                    'subtask_form': TaskForm()})
 
 
 def delete_task(request, task_id):
@@ -78,5 +71,4 @@ def delete_task(request, task_id):
 
     return render(request, 'tasks/home.html', {'task_form': TaskForm(),
                                                 'task_detail_form': TaskForm(instance=task),
-                                                'subtask_form': TaskForm(),
-                                                'tasks': Task.objects.filter(parent__isnull=True)})
+                                                'subtask_form': TaskForm()})

@@ -1,11 +1,13 @@
 {% extends 'base.html' %}
 {% load static %}
+{% load tasks_tags %}
 
 {% block title %}Tasks{% endblock %}
 
 {% block head %}<link href="{% static 'tasks/css/home.css' %}" rel="stylesheet">{% endblock %}
 
 {% block sidebar %}
+    {% get_tasks as tasks %}
     <ul id="tasks-list">
         {% for task in tasks %}
             {% include 'tasks/tree_view.html' %}
