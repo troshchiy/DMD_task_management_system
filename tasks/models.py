@@ -49,13 +49,14 @@ class Task(models.Model):
     def save(self, clean=True):
         if clean:
             self.clean()
-            self.calculate_planned_labor_intensity()
 
             if self.status == Task.Status.COMPLETED:
                 self.set_completed_status_recursively()
 
                 self.completed_at = timezone.now()
-                self.actual_completion_time = self.completed_at - self.created_at
+                self.calculate_actual_completion_time()
+
+            self.calculate_planned_labor_intensity()
 
         models.Model.save(self)
 
@@ -83,19 +84,13 @@ class Task(models.Model):
         if self.parent:
             self.parent.calculate_planned_labor_intensity()
 
-    def get_planned_labor_intensity(self):
-        days = self.planned_labor_intensity.days
-        seconds = self.planned_labor_intensity.seconds
-        hours, seconds = divmod(seconds, 3600)
-        minutes, seconds = divmod(seconds, 60)
-        return f'{days} days, {hours} hours, {minutes} minutes'
+    def calculate_actual_completion_time(self):
+        actual_completion_time = self.completed_at - self.created_at
+        for subtask in self.task_set.all():
+            actual_completion_time += subtask.actual_completion_time
 
-    def get_actual_completion_time(self):
-        days = self.actual_completion_time.days
-        seconds = self.actual_completion_time.seconds
-        hours, seconds = divmod(seconds, 3600)
-        minutes, seconds = divmod(seconds, 60)
-        return f'{days} days, {hours} hours, {minutes} minutes'
+        self.actual_completion_time = actual_completion_time
+        models.Model.save(self)
 
     def get_completed_at(self):
         if self.completed_at:

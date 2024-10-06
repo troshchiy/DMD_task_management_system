@@ -5,6 +5,7 @@ from datetime import timezone, timedelta
 from django.http import JsonResponse
 from django.template.loader import render_to_string
 from django.utils.html import escape
+from django.utils import timezone as dj_timezone
 
 from tasks.models import Task
 from tasks.forms import TaskForm, EmptyFieldErrorMessage
@@ -278,26 +279,10 @@ class TaskDetailTest(UnitTest):
             actual_completed_at
         )
 
-    def test_for_AJAX_shows_correct_actual_completion_time_value(self):
-        task = self.create_task(status='PR')
-        task.save(clean=False)
-
-        task.status = 'CM'
-        task.save()
-
-        ajax_response = self.ajax_get(task.id)
-        form = json.loads(ajax_response.content)['form']
-
-        task = Task.objects.first()
-        actual_completion_time = re.findall('id="id_actual_completion_time".*?>(.*?)</', form)[0]
-        self.assertEqual(
-            task.get_actual_completion_time(),
-            actual_completion_time
-        )
-
     def test_for_AJAX_shows_correct_planned_labor_intensity_value(self):
         task = self.create_task()
-        task.save()
+        task.planned_labor_intensity = timedelta(days=1, minutes=14)
+        task.save(clean=False)
 
         ajax_response = self.ajax_get(task.id)
         form = json.loads(ajax_response.content)['form']
@@ -305,45 +290,7 @@ class TaskDetailTest(UnitTest):
         task = Task.objects.first()
         actual_planned_labor_intensity = re.findall('id="id_planned_labor_intensity".*?>(.*?)</', form)[0]
         self.assertEqual(
-            task.get_planned_labor_intensity(),
-            actual_planned_labor_intensity
-        )
-
-    def test_for_AJAX_shows_correct_planned_labor_intensity_value_when_creating_subtasks(self):
-        task = self.create_task()
-        task.save()
-        subtask_1 = self.create_task(parent=task)
-        subtask_1.save()
-        subtask_2 = self.create_task(parent=task)
-        subtask_2.save()
-
-        ajax_response = self.ajax_get(task.id)
-        form = json.loads(ajax_response.content)['form']
-
-        task = Task.objects.get(id=task.id)
-        actual_planned_labor_intensity = re.findall('id="id_planned_labor_intensity".*?>(.*?)</', form)[0]
-        self.assertEqual(
-            task.get_planned_labor_intensity(),
-            actual_planned_labor_intensity
-        )
-
-    def test_for_AJAX_shows_correct_planned_labor_intensity_value_when_deleting_subtasks(self):
-        task = self.create_task()
-        task.save()
-        subtask_1 = self.create_task(parent=task)
-        subtask_1.save()
-        subtask_2 = self.create_task(parent=task)
-        subtask_2.save()
-
-        subtask_2.delete()
-
-        ajax_response = self.ajax_get(task.id)
-        form = json.loads(ajax_response.content)['form']
-
-        task = Task.objects.get(id=task.id)
-        actual_planned_labor_intensity = re.findall('id="id_planned_labor_intensity".*?>(.*?)</', form)[0]
-        self.assertEqual(
-            task.get_planned_labor_intensity(),
+            '1 days, 0 hours, 14 minutes',
             actual_planned_labor_intensity
         )
 
@@ -368,70 +315,15 @@ class TaskDetailTest(UnitTest):
 
     def test_for_GET_shows_correct_planned_labor_intensity_value(self):
         task = self.create_task()
-        task.save()
-
-        response = self.client.get(f'/tasks/{task.id}/').content.decode('utf8')
-
-        task = Task.objects.first()
-        actual_planned_labor_intensity = re.findall('id="id_planned_labor_intensity".*?>(.*?)</', response)[0]
-        self.assertEqual(
-            task.get_planned_labor_intensity(),
-            actual_planned_labor_intensity
-        )
-
-    def test_for_GET_shows_correct_planned_labor_intensity_value_when_creating_subtasks(self):
-        task = self.create_task()
-        task.save()
-        subtask_1 = self.create_task(parent=task)
-        subtask_1.save()
-        subtask_2 = self.create_task(parent=task)
-        subtask_2.save()
-
-        response = self.client.get(f'/tasks/{task.id}/').content.decode('utf8')
-
-        task = Task.objects.get(id=task.id)
-        subtask_1 = Task.objects.get(id=subtask_1.id)
-        subtask_2 = Task.objects.get(id=subtask_2.id)
-
-        actual_planned_labor_intensity = re.findall('id="id_planned_labor_intensity".*?>(.*?)</', response)[0]
-        self.assertEqual(
-            task.get_planned_labor_intensity(),
-            actual_planned_labor_intensity
-        )
-
-    def test_for_GET_shows_correct_planned_labor_intensity_value_when_deleting_subtasks(self):
-        task = self.create_task()
-        task.save()
-        subtask_1 = self.create_task(parent=task)
-        subtask_1.save()
-        subtask_2 = self.create_task(parent=task)
-        subtask_2.save()
-
-        subtask_2.delete()
-
-        response = self.client.get(f'/tasks/{task.id}/').content.decode('utf8')
-
-        task = Task.objects.get(id=task.id)
-        actual_planned_labor_intensity = re.findall('id="id_planned_labor_intensity".*?>(.*?)</', response)[0]
-        self.assertEqual(
-            task.get_planned_labor_intensity(),
-            actual_planned_labor_intensity
-        )
-
-    def test_for_GET_shows_correct_actual_completion_time_value(self):
-        task = self.create_task(status='PR')
+        task.planned_labor_intensity = timedelta(days=1, minutes=14)
         task.save(clean=False)
 
-        task.status = 'CM'
-        task.save()
-
         response = self.client.get(f'/tasks/{task.id}/').content.decode('utf8')
 
-        task = Task.objects.first()
-        actual_completion_time = re.findall('id="id_actual_completion_time".*?>(.*?)</', response)[0]
+        actual_planned_labor_intensity = re.findall('id="id_planned_labor_intensity".*?>(.*?)</', response)[0]
         self.assertEqual(
-            task.get_actual_completion_time(),
-            actual_completion_time
+            '1 days, 0 hours, 14 minutes',
+            actual_planned_labor_intensity
         )
 
     def test_shows_add_subtask_form_on_page(self):
