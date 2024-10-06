@@ -153,7 +153,7 @@ class TaskEditingTest(FunctionalTest):
 
         # Then User submit changes via "Save" button
         save_btn = task_detail.find_element(By.CLASS_NAME, 'submit-btn')
-        self.assertEqual(save_btn.get_attribute('value'), 'Save')
+        self.assertEqual(save_btn.get_attribute('value'), 'Save changes')
         save_btn.click()
 
         edited_task_planned_labor_intensity = (datetime.strptime(edit_data['deadline'], '%Y-%m-%d %H:%M')

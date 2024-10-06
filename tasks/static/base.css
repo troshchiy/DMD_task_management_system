@@ -20,44 +20,50 @@ body {
     text-align: center;
 }
 
-#sidebar ul {
-    padding: 10px 0;
-    overflow: auto;
-    white-space: nowrap;
-}
-
-#sidebar li {
-    padding: 0 6px;
-    font-size: 18px;
-    display: block;
-    cursor: pointer;
-}
-
-#sidebar li:hover {
-  background-color: #f5f5f5;
-}
-
-#tasks-list a {
-    text-decoration: none;
-    color: #111;
-}
-
 #content {
   margin-left: 350px; /* Same as the width of the sidebar */
   font-size: 28px; /* Increased text to enable scrolling */
   padding: 0px 10px;
 }
 
-#id_title {
-    width: 70%;
-    padding: 10px 6px;
+input, select {
     font-size: 18px;
+    padding: 6px;
     border-radius: 6px;
     border: 1px solid #ccc;
     transition: border-color ease-in-out .15s;
 }
 
-#id_title:focus {
+input:focus {
     border-color: #6f42c1;
     outline: 0;
+}
+
+select:hover {
+    background-color: #ccc;
+}
+
+.container {
+    display: inline-block;
+    width: 70%;
+    padding: 2px 12px;
+    font-size: 18px;
+}
+
+h3, h2, p {
+    font-size: 36px;
+    margin: 0;
+    padding: 6px;
+}
+
+h3 {
+    font-size: 28px;
+}
+
+p {
+    font-size: 24px;
+}
+
+textarea {
+    resize: none;
 }

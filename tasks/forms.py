@@ -20,6 +20,8 @@ class TaskForm(forms.ModelForm):
             }),
             'description': forms.fields.Textarea(attrs={
                 'placeholder': 'Description',
+                'rows': 1,
+                'oninput': 'autoGrow(this)'
             }),
             'performers': forms.fields.TextInput(attrs={
                 'placeholder': 'Performers',

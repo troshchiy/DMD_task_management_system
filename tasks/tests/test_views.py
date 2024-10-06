@@ -280,7 +280,7 @@ class TaskDetailTest(UnitTest):
 
         task = Task.objects.first()
         expected_completed_at = task.completed_at
-        actual_completed_at = re.findall('<div id="id_completed_at".*?>(.*?)</div>', form)[0]
+        actual_completed_at = re.findall('id="id_completed_at".*?>(.*?)</', form)[0]
         self.assertEqual(
             expected_completed_at.astimezone(timezone(timedelta(hours=7))).strftime(UnitTest.DATETIME_FORMAT),
             actual_completed_at
@@ -294,7 +294,7 @@ class TaskDetailTest(UnitTest):
         form = json.loads(ajax_response.content)['form']
 
         task = Task.objects.first()
-        actual_completion_time = re.findall('<div id="id_actual_completion_time".*?>(.*?)</div>', form)[0]
+        actual_completion_time = re.findall('id="id_actual_completion_time".*?>(.*?)</', form)[0]
         self.assertEqual(
             task.get_actual_completion_time(),
             actual_completion_time
@@ -308,7 +308,7 @@ class TaskDetailTest(UnitTest):
         form = json.loads(ajax_response.content)['form']
 
         task = Task.objects.first()
-        actual_planned_labor_intensity = re.findall('<div id="id_planned_labor_intensity".*?>(.*?)</div>', form)[0]
+        actual_planned_labor_intensity = re.findall('id="id_planned_labor_intensity".*?>(.*?)</', form)[0]
         self.assertEqual(
             task.get_planned_labor_intensity(),
             actual_planned_labor_intensity
@@ -326,7 +326,7 @@ class TaskDetailTest(UnitTest):
         form = json.loads(ajax_response.content)['form']
 
         task = Task.objects.get(id=task.id)
-        actual_planned_labor_intensity = re.findall('<div id="id_planned_labor_intensity".*?>(.*?)</div>', form)[0]
+        actual_planned_labor_intensity = re.findall('id="id_planned_labor_intensity".*?>(.*?)</', form)[0]
         self.assertEqual(
             task.get_planned_labor_intensity(),
             actual_planned_labor_intensity
@@ -346,7 +346,7 @@ class TaskDetailTest(UnitTest):
         form = json.loads(ajax_response.content)['form']
 
         task = Task.objects.get(id=task.id)
-        actual_planned_labor_intensity = re.findall('<div id="id_planned_labor_intensity".*?>(.*?)</div>', form)[0]
+        actual_planned_labor_intensity = re.findall('id="id_planned_labor_intensity".*?>(.*?)</', form)[0]
         self.assertEqual(
             task.get_planned_labor_intensity(),
             actual_planned_labor_intensity
@@ -378,7 +378,7 @@ class TaskDetailTest(UnitTest):
         response = self.client.get(f'/tasks/{task.id}/').content.decode('utf8')
 
         task = Task.objects.first()
-        actual_planned_labor_intensity = re.findall('<div id="id_planned_labor_intensity".*?>(.*?)</div>', response)[0]
+        actual_planned_labor_intensity = re.findall('id="id_planned_labor_intensity".*?>(.*?)</', response)[0]
         self.assertEqual(
             task.get_planned_labor_intensity(),
             actual_planned_labor_intensity
@@ -398,7 +398,7 @@ class TaskDetailTest(UnitTest):
         subtask_1 = Task.objects.get(id=subtask_1.id)
         subtask_2 = Task.objects.get(id=subtask_2.id)
 
-        actual_planned_labor_intensity = re.findall('<div id="id_planned_labor_intensity".*?>(.*?)</div>', response)[0]
+        actual_planned_labor_intensity = re.findall('id="id_planned_labor_intensity".*?>(.*?)</', response)[0]
         self.assertEqual(
             task.get_planned_labor_intensity(),
             actual_planned_labor_intensity
@@ -417,7 +417,7 @@ class TaskDetailTest(UnitTest):
         response = self.client.get(f'/tasks/{task.id}/').content.decode('utf8')
 
         task = Task.objects.get(id=task.id)
-        actual_planned_labor_intensity = re.findall('<div id="id_planned_labor_intensity".*?>(.*?)</div>', response)[0]
+        actual_planned_labor_intensity = re.findall('id="id_planned_labor_intensity".*?>(.*?)</', response)[0]
         self.assertEqual(
             task.get_planned_labor_intensity(),
             actual_planned_labor_intensity
@@ -430,7 +430,7 @@ class TaskDetailTest(UnitTest):
         response = self.client.get(f'/tasks/{task.id}/').content.decode('utf8')
 
         task = Task.objects.first()
-        actual_completion_time = re.findall('<div id="id_actual_completion_time".*?>(.*?)</div>', response)[0]
+        actual_completion_time = re.findall('id="id_actual_completion_time".*?>(.*?)</', response)[0]
         self.assertEqual(
             task.get_actual_completion_time(),
             actual_completion_time

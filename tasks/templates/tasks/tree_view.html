@@ -1,7 +1,7 @@
 <li>
-    <span class="task-title" data-url="{% url 'task_detail' task.id %}" onclick="getTaskDetail(this);">
-        {{ task.title }}
-    </span>
+    <div class="task-title" data-url="{% url 'task_detail' task.id %}" onclick="getTaskDetail(this);">
+        <span>{{ task.title }}</span>
+    </div>
     {% with task.task_set.all as subtasks %}
         {% if subtasks %}
             <ul class="nested">

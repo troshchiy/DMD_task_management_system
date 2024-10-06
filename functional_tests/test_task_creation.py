@@ -35,11 +35,8 @@ class TaskCreationTest(FunctionalTest):
             'Performers'
         )
 
-        deadline = self.get_new_task_element_by_id('deadline')
-        deadline_label = deadline.find_element(By.TAG_NAME, 'label')
-        self.assertEqual(deadline_label.text, 'Deadline:')
 
-        deadline_inputbox = deadline.find_element(By.ID, 'id_deadline')
+        deadline_inputbox = self.get_new_task_element_by_id('id_deadline')
         self.assertEqual(
             deadline_inputbox.get_attribute('placeholder'),
             'e.g. 2025-01-25 14:30'
