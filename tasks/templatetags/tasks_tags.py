@@ -1,3 +1,5 @@
+from datetime import timezone, timedelta
+
 from django import template
 from tasks.models import Task
 
@@ -15,3 +17,7 @@ def duration(timedelta):
     hours, seconds = divmod(seconds, 3600)
     minutes, seconds = divmod(seconds, 60)
     return f'{days} days, {hours} hours, {minutes} minutes'
+
+@register.filter
+def time_format(time):
+    return time.strftime('%Y-%m-%d %H:%M')
