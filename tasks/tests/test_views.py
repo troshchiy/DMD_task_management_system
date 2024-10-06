@@ -261,8 +261,11 @@ class TaskDetailTest(UnitTest):
         self.assertIn('id="id_created_at"', task_detail_form)
 
     def test_for_AJAX_shows_correct_completed_at_value(self):
-        task = self.create_task(status='CM')
+        task = self.create_task(status='PR')
         task.save(clean=False)
+
+        task.status = 'CM'
+        task.save()
 
         ajax_response = self.ajax_get(task.id)
         form = json.loads(ajax_response.content)['form']
@@ -276,8 +279,11 @@ class TaskDetailTest(UnitTest):
         )
 
     def test_for_AJAX_shows_correct_actual_completion_time_value(self):
-        task = self.create_task(status='CM')
+        task = self.create_task(status='PR')
         task.save(clean=False)
+
+        task.status = 'CM'
+        task.save()
 
         ajax_response = self.ajax_get(task.id)
         form = json.loads(ajax_response.content)['form']
@@ -413,8 +419,11 @@ class TaskDetailTest(UnitTest):
         )
 
     def test_for_GET_shows_correct_actual_completion_time_value(self):
-        task = self.create_task(status='CM')
+        task = self.create_task(status='PR')
         task.save(clean=False)
+
+        task.status = 'CM'
+        task.save()
 
         response = self.client.get(f'/tasks/{task.id}/').content.decode('utf8')
 
@@ -613,8 +622,10 @@ class TaskDetailTest(UnitTest):
         task = self.create_task(status='PR')
         task.save(clean=False)
         subtask_1 = self.create_task(parent=task, status='PR')
+        subtask_1.planned_labor_intensity = timedelta(days=14, hours=8, minutes=7)
         subtask_1.save(clean=False)
         subtask_2 = self.create_task(parent=task, status='PR')
+        subtask_2.planned_labor_intensity = timedelta(days=2)
         subtask_2.save(clean=False)
 
         new_data = UnitTest.VALID_TASK_DATA
@@ -633,8 +644,10 @@ class TaskDetailTest(UnitTest):
         task = self.create_task(status='PR')
         task.save(clean=False)
         subtask_1 = self.create_task(parent=task, status='PR')
+        subtask_1.planned_labor_intensity = timedelta(days=14, hours=8, minutes=7)
         subtask_1.save(clean=False)
         subtask_2 = self.create_task(parent=task, status='AS')
+        subtask_2.planned_labor_intensity = timedelta(days=2)
         subtask_2.save(clean=False)
 
         new_data = UnitTest.VALID_TASK_DATA
@@ -653,8 +666,10 @@ class TaskDetailTest(UnitTest):
         task = self.create_task(status='PR')
         task.save(clean=False)
         subtask_1 = self.create_task(parent=task, status='PR')
+        subtask_1.planned_labor_intensity = timedelta(days=14, hours=8, minutes=7)
         subtask_1.save(clean=False)
         subtask_2 = self.create_task(parent=task, status='AS')
+        subtask_2.planned_labor_intensity = timedelta(days=2)
         subtask_2.save(clean=False)
 
         new_data = UnitTest.VALID_TASK_DATA

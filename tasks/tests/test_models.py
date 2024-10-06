@@ -178,20 +178,23 @@ class TaskModelTest(UnitTest):
         self.assertEqual(task.planned_labor_intensity, expected_planned_labor_intensity)
 
     def test_automatically_sets_completed_at_field_value(self):
-        self.create_task().save()
+        self.create_task(status='PR').save(clean=False)
 
         task = Task.objects.first()
         self.assertIsNone(task.completed_at)
 
         task.status = 'CM'
-        task.save(clean=False)
+        task.save()
 
         task = Task.objects.first()
         self.assertAlmostEqual(task.completed_at, timezone.now(), delta=datetime.timedelta(seconds=1))
 
     def test_automatically_sets_actual_completion_time_field_value_when_completing_task(self):
-        task = self.create_task(status='CM')
+        task = self.create_task(status='PR')
         task.save(clean=False)
+
+        task.status = 'CM'
+        task.save()
 
         added_task = Task.objects.first()
         expected_actual_completion_time = added_task.completed_at - added_task.created_at
@@ -287,8 +290,10 @@ class TaskModelTest(UnitTest):
         task = self.create_task(status='PR')
         task.save(clean=False)
         subtask_1 = self.create_task(parent=task, status='PR')
+        subtask_1.planned_labor_intensity = datetime.timedelta(days=2, minutes=57)
         subtask_1.save(clean=False)
         subtask_2 = self.create_task(parent=task, status='PR')
+        subtask_2.planned_labor_intensity = datetime.timedelta(days=1)
         subtask_2.save(clean=False)
 
         task.status = 'CM'
@@ -306,7 +311,9 @@ class TaskModelTest(UnitTest):
         task.save(clean=False)
         subtask_1 = self.create_task(parent=task, status='PR')
         subtask_1.save(clean=False)
+        subtask_1.planned_labor_intensity = datetime.timedelta(days=14, hours=8, minutes=7)
         subtask_2 = self.create_task(parent=task, status='AS')
+        subtask_2.planned_labor_intensity = datetime.timedelta(days=2)
         subtask_2.save(clean=False)
 
         task.status = 'CM'
